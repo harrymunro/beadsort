@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# beadsort runtime
+.beadsort/cache.json
+.beadsort/bd.lock
+.beadsort/*.tmp
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/
