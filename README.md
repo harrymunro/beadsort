@@ -23,14 +23,14 @@ Typed answers, not prose. Re-run the whole backlog in seconds. Written straight 
 $ beadsort run
 bead         title                                     dimension    change            note
 -----------  ----------------------------------------  -----------  ----------------  ------
-fls-tq6e.11  Bring a named FLS cyber security person…  waiting-on   - -> sebastian
-fls-tq6e.11  Bring a named FLS cyber security person…  ask-urgency  - -> blocking
-fls-tq6e.22  Send the retention email to Sebastian     stale        - -> done
-fls-jytu.2   Get the client list from Mike             waiting-on   mike -> romy
-fls-m3cc.1   Decide where the forecast lives           waiting-on   - -> owner
-fls-m3cc.1   Decide where the forecast lives           owner-kind   - -> decision
-fls-8yih     Exclude epics from the workable count     size         - -> s
-fls-8yih     Exclude epics from the workable count     agent-ready  - -> yes
+tq6e.11  Bring a named cyber security person…      waiting-on   - -> jim
+tq6e.11  Bring a named cyber security person…      ask-urgency  - -> blocking
+tq6e.22  Send the retention email to Sebastian     stale        - -> done
+jytu.2   Get the client list from Joe              waiting-on   joe -> tim
+m3cc.1   Decide where the forecast lives           waiting-on   - -> owner
+m3cc.1   Decide where the forecast lives           owner-kind   - -> decision
+8yih     Exclude epics from the workable count     size         - -> s
+8yih     Exclude epics from the workable count     agent-ready  - -> yes
 127 bead(s), 127 model call(s), 0 cached, 233,410 input tokens (~$0.0098)
 6 bead(s) need a human look: `beadsort review`
 dry run: nothing written. Add --apply to write labels into beads.
@@ -62,7 +62,7 @@ bd ready -l agent-ready:yes                 # only work an agent can start cold
 bd ready --exclude-label waiting-on:mike    # skip anything waiting on Mike
 bd list -l waiting-on:owner                 # decisions and admin only you can do
 bd query "label=size:s AND status=open"     # small open work
-bd state fls-8yih size                      # -> s
+bd state 8yih size                          # -> s
 ```
 
 ## Running it
