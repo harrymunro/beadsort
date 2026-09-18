@@ -67,6 +67,14 @@ def guard(command: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """Turn BeadsortError into the envelope + exit code; everything else is a real bug."""
 
     def decorator(fn: Callable[..., Any]) -> Callable[..., Any]:
+        @click.option(
+            "-C",
+            "--directory",
+            "directory",
+            type=click.Path(file_okay=False, path_type=Path),
+            default=None,
+            help="Run as if started in this directory.",
+        )
         @click.option("--json", "json_mode", is_flag=True, help="Machine-readable envelope.")
         @click.option("-q", "--quiet", is_flag=True, help="Only errors.")
         @functools.wraps(fn)
@@ -74,10 +82,13 @@ def guard(command: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         def wrapper(
             session: Session,
             *args: Any,
+            directory: Path | None = None,
             json_mode: bool = False,
             quiet: bool = False,
             **kwargs: Any,
         ) -> Any:
+            if directory is not None:
+                session.cwd = directory.resolve()
             if json_mode:
                 session.emitter.json_mode = True
             if quiet:
@@ -140,7 +151,7 @@ def _load(session: Session, repo: Path, only_packs: tuple[str, ...] = ()) -> Loa
     cache = CacheStore(config.cache_path).load()
     cache.drop_missing(set(index.beads))
     for warning in [*config.warnings, *warnings]:
-        session.emitter.note(f"warning: {warning}")
+        session.emitter.note(f"warning [{repo.name}]: {warning}")
     return Loaded(repo, config, bd, index, cache, packs, list(warnings))
 
 
@@ -278,7 +289,14 @@ def run_cmd(
     partial = False
     missing_key = False
     for repo in session.repos(root, max_depth):
-        loaded = _load(session, repo, packs_only)
+        try:
+            loaded = _load(session, repo, packs_only)
+        except BeadsortError as exc:
+            if root is None:
+                raise
+            data.append({"repo": str(repo), "error": exc.to_dict()})
+            human.append(f"== {repo}\nskipped: [{exc.code}] {exc.message}")
+            continue
         config = loaded.config
         model_name = model or config.model
         beads = select_beads(
@@ -386,7 +404,14 @@ def status(session: Session, bead_id: str | None, root: Path | None, max_depth: 
     data: list[dict[str, Any]] = []
     human: list[str] = []
     for repo in session.repos(root, max_depth):
-        loaded = _load(session, repo)
+        try:
+            loaded = _load(session, repo)
+        except BeadsortError as exc:
+            if root is None:
+                raise
+            data.append({"repo": str(repo), "error": exc.to_dict()})
+            human.append(f"== {repo}\nskipped: [{exc.code}] {exc.message}")
+            continue
         dims = [d for p in loaded.packs for d in p.pack.dimensions]
         if bead_id:
             bead = loaded.index.get(bead_id)

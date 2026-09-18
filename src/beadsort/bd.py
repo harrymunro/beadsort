@@ -150,9 +150,14 @@ class BdClient:
         write: bool = False,
         input_text: str | None = None,
         timeout: float | None = None,
+        use_cwd: bool = False,
     ) -> str:
-        """Run bd and return stdout. Raises BdError on non-zero exit."""
-        cmd = [self.bd_bin, "-C", str(self.repo)]
+        """Run bd and return stdout. Raises BdError on non-zero exit.
+
+        `use_cwd` runs bd inside the repo directory instead of passing `-C`, which bd
+        refuses for a directory that is not yet a beads project (so: `init`).
+        """
+        cmd = [self.bd_bin] if use_cwd else [self.bd_bin, "-C", str(self.repo)]
         if write:
             cmd += ["--actor", self.actor]
         cmd += list(args)
@@ -167,6 +172,7 @@ class BdClient:
                     timeout=timeout or self.timeout,
                     env=self._env(),
                     check=False,
+                    cwd=str(self.repo) if use_cwd else None,
                 )
         except FileNotFoundError as exc:
             raise BdError(
@@ -256,15 +262,25 @@ class BdClient:
         return list(data) if isinstance(data, list) else []
 
     def config_get(self, key: str) -> str | None:
+        """`bd config get <key>`: the bare value, or None when unset.
+
+        bd prints `<key> (not set)` with exit code 0 for an unset key, and the bare value
+        (or `<key> = <value>` in some versions) when set.
+        """
         try:
             out = self.run(["config", "get", key])
         except BdError:
             return None
-        value = out.strip()
-        if not value or value.lower() in {"(not set)", "not set", "null", "<nil>"}:
+        value = out.strip().splitlines()[-1].strip() if out.strip() else ""
+        if not value:
             return None
-        if "=" in value and value.startswith(key):
-            value = value.split("=", 1)[1].strip()
+        lowered = value.lower()
+        if lowered.endswith("(not set)") or lowered in {"(not set)", "not set", "null", "<nil>"}:
+            return None
+        for prefix in (f"{key} = ", f"{key}=", f"{key}: ", f"{key} "):
+            if value.startswith(prefix):
+                value = value[len(prefix) :].strip()
+                break
         return value or None
 
     # ---- writes ----------------------------------------------------------------
@@ -329,7 +345,9 @@ class BdClient:
         return bead_id
 
     def init(self, prefix: str) -> None:
+        self.repo.mkdir(parents=True, exist_ok=True)
         self.run(
             ["init", "-p", prefix, "--non-interactive", "--skip-hooks", "--skip-agents", "-q"],
             write=True,
+            use_cwd=True,
         )

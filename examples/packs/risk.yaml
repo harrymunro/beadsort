@@ -1,0 +1,61 @@
+# A small user-written pack: change risk for open code work.
+# Enable with:   packs: [triage, size, agent-ready, {path: ./packs/risk.yaml}]
+# (relative to the repo root) or copy it to .beadsort/packs/risk.yaml and list `risk`.
+id: change-risk
+version: 1
+description: How much could go wrong if this change were done badly, and who should look.
+
+applies_to:
+  statuses: [open, in_progress]
+  types: [task, feature, bug]
+
+questions:
+  touches_money:
+    type: noul
+    instructions: >-
+      Does `bead.description` describe a change to how money is charged, paid, refunded
+      or recorded?
+    criteria:
+      "true":
+        what: "Charges, invoices, refunds, payouts, ledgers or reconciliation"
+        examples: ["fix the refund double count", "change the invoice numbering"]
+      "false":
+        what: "No money moves or is recorded differently"
+
+  blast_radius:
+    type: score
+    instructions:
+      question: "If this change were done wrongly, what would break?"
+      focus: "Judge consequences for other code, users and data, not the difficulty of the work."
+    criteria:
+      - what: "Nothing else depends on it; easy to revert"
+        examples: ["a new document in docs/", "a log message"]
+      - what: "Other code or users rely on it, but tests exist or it can be rolled back"
+        examples: ["change what a report counts", "add a retry path"]
+      - what: "Security, credentials, data integrity, money, a public API, or no easy rollback"
+        examples: ["rotate production credentials", "a data migration"]
+
+  needs_review_by:
+    type: choice
+    criteria_from: people
+    instructions: "Who, if anyone, should look at this change before it lands?"
+    criteria:
+      nobody: "No review needed beyond the usual"
+
+thresholds:
+  min_confidence: 0.6
+
+outputs:
+  - {dimension: touches-money, from: touches_money, yes_above: 0.7, no_below: 0.3}
+  - {dimension: blast, from: blast_radius, by: argmax, levels: [low, medium, high], min_confidence: 0.5}
+  - {dimension: review-by, from: needs_review_by, min_confidence: 0.7, skip: [nobody]}
+  - dimension: change-risk
+    composite:
+      inputs:
+        blast_radius: {weight: 0.7}
+        touches_money: {weight: 0.3}
+      buckets:
+        - {max: 0.34, value: low}
+        - {max: 0.67, value: medium}
+        - {value: high}
+      min_confidence: 0.5

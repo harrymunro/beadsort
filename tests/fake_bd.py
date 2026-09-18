@@ -154,7 +154,8 @@ def main(argv: list[str]) -> int:
         if len(args) >= 3 and args[1] == "get":
             value = store.get("config", {}).get(args[2])
             if value is None:
-                return _fail("not_set", f"{args[2]} is not set")
+                sys.stdout.write(f"{args[2]} (not set)\n")  # real bd: exit 0, not an error
+                return 0
             sys.stdout.write(f"{value}\n")
             return 0
         return _fail("usage", "unsupported config invocation")

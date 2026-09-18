@@ -1,0 +1,50 @@
+# Example .beadsort/config.yaml for a consultancy engagement tracked in beads.
+# Copy to <repo>/.beadsort/config.yaml and edit. Never put an API key here.
+version: 1
+
+owner: "Harry"
+
+project:
+  name: FLS
+  summary: >-
+    Consultancy engagement with a client's products business line: four hosted tools
+    (PropGen, Scout, Horizon, ProcessLabz) plus advisory material, tracked in this repo.
+  conventions: >-
+    Descriptions carry a '## Friendly Summary' then '## Technical' section. Updates are
+    dated; the newest update is the current truth and overrides the description.
+  agent_names: [Notarius, Scriba, Consul, Censor, Clio, Thalia, Archimedes]
+
+people:
+  mike:      {name: "Mike Lefler",  aliases: [Mike],                 role: "programme sponsor, client side"}
+  james:     {name: "James Smyth",  aliases: ["James Smith", James],  role: "sales intelligence lead, client side"}
+  josiane:   {name: "Josiane",      aliases: [],                      role: "risk and compliance; Scout business owner"}
+  romy:      {name: "Romy",         aliases: [],                      role: "CRM rules of use; PropGen and Horizon business owner"}
+  sebastian: {name: "Sebastian",    aliases: [],                      role: "head of PMO IT, client side"}
+
+repos:
+  propgen: "RFQ to priced proposal (pg- beads)"
+  scout: "enquiry pack to opportunity brief (sc- beads)"
+  horizon: "order intake forecast (as- beads)"
+
+packs:
+  - triage
+  - size
+  - id: agent-ready
+    thresholds: {spec_ready: 1.5}
+
+model: jev-latest
+workers: 8
+
+state:
+  max_description_chars: 6000
+  max_updates: 6
+  max_update_chars: 1200
+  parent_excerpt_chars: 600
+  max_total_chars: 24000
+
+select:
+  statuses: [open, in_progress, blocked]
+  types: []
+
+on_uncertain: skip
+audit: true

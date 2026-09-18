@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import threading
 from pathlib import Path
 
@@ -74,6 +75,13 @@ def test_config_get_missing_returns_none(fake_bd: dict) -> None:
     assert BdClient(fake_bd["repo"]).config_get("custom.beadsort.api_key") is None
 
 
+def test_config_get_set_value(fake_bd: dict) -> None:
+    store = read_store(fake_bd["store"])
+    store["config"]["custom.beadsort.api_key"] = "sk-from-bd"
+    fake_bd["store"].write_text(json.dumps(store), encoding="utf-8")
+    assert BdClient(fake_bd["repo"]).config_get("custom.beadsort.api_key") == "sk-from-bd"
+
+
 def test_helpers() -> None:
     assert unwrap_envelope({"data": [1], "schema_version": 1}) == [1]
     assert unwrap_envelope([1]) == [1]
@@ -112,3 +120,10 @@ def test_calls_are_serialised_per_repo(fake_bd: dict) -> None:
     # What we assert is that every call completed and the client counted them all.
     assert bd.calls == 20
     assert peak >= 1
+
+
+def test_init_runs_in_the_directory_without_dash_c(fake_bd: dict, tmp_path: Path) -> None:
+    target = tmp_path / "fresh"
+    BdClient(target).init("fresh")
+    argv = read_calls(fake_bd["log"])[-1]["argv"]
+    assert "-C" not in argv and argv[:2] == ["--actor", "beadsort"] and "init" in argv
