@@ -21,6 +21,14 @@ htmlcov/
 .idea/
 .vscode/
 
+# Node / secrets (kept out of the public repo)
+node_modules/
+.env
+.env.*
+
+# Promo video project (Remotion sources, voiceover, renders): local only
+promo/
+
 # Beads / Dolt files (added by bd init)
 .dolt/
 *.db
