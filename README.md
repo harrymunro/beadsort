@@ -29,7 +29,7 @@ fls-m3cc.1   Decide where the forecast lives           waiting-on   - -> owner
 fls-m3cc.1   Decide where the forecast lives           owner-kind   - -> decision
 fls-8yih     Exclude epics from the workable count     size         - -> s
 fls-8yih     Exclude epics from the workable count     agent-ready  - -> yes
-127 bead(s), 127 model call(s), 0 cached, 233,410 input tokens (~$0.0098), 19.4s
+127 bead(s), 127 model call(s), 0 cached, 233,410 input tokens (~$0.0098)
 6 bead(s) need a human look: `beadsort review`
 dry run: nothing written. Add --apply to write labels into beads.
 ```

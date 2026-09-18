@@ -64,7 +64,7 @@ def probe_metadata(*, bd_bin: str = "bd", actor: str = "beadsort") -> ProbeResul
             bd.init("probe")
             bead_id = bd.create("beadsort metadata probe")
         except BdError as exc:
-            return ProbeResult("none", [f"could not create a scratch repo: {exc.message}"])
+            return ProbeResult("unknown", [f"could not create a scratch repo: {exc.message}"])
 
         def read_back() -> tuple[Mapping[str, Any] | None, Mapping[str, Any] | None]:
             shown = _metadata_of(bd.show(bead_id))
@@ -119,12 +119,22 @@ def probe_metadata(*, bd_bin: str = "bd", actor: str = "beadsort") -> ProbeResul
         return ProbeResult("none", notes, None)
 
 
-def ensure_capability(cache: CacheStore, bd_version: str, *, bd_bin: str = "bd") -> str:
-    """Return the metadata capability, probing once per bd version."""
+def ensure_capability(
+    cache: CacheStore, bd_version: str, *, bd_bin: str = "bd", force: bool = False
+) -> str:
+    """Return the metadata capability, probing once per bd version.
+
+    A probe that could not even create a scratch repo is reported as "unknown" and is
+    never cached, so the next run tries again. Callers treat "unknown" like "none".
+    """
     caps = cache.capabilities
-    if caps.get("metadata") in CAPABILITIES and caps.get("checked_bd") == bd_version:
+    if not force and caps.get("metadata") in CAPABILITIES and caps.get("checked_bd") == bd_version:
         return str(caps["metadata"])
     result = probe_metadata(bd_bin=bd_bin)
+    if result.capability == "unknown":
+        caps["last_probe_error"] = "; ".join(result.notes)
+        return "unknown"
+    caps.pop("last_probe_error", None)
     caps.update(
         {
             "metadata": result.capability,
@@ -203,13 +213,16 @@ def run_checks(
         cache = CacheStore(config.cache_path).load()
         caps = cache.capabilities
         if probe and version:
-            capability = ensure_capability(cache, version, bd_bin=bd_bin)
+            capability = ensure_capability(cache, version, bd_bin=bd_bin, force=True)
             cache.save()
-            notes_text = "; ".join(caps.get("notes") or [])
+            if capability == "unknown":
+                notes_text = caps.get("last_probe_error") or "probe failed"
+            else:
+                notes_text = "; ".join(caps.get("notes") or [])
             checks.append(
                 Check(
                     "metadata round-trip",
-                    capability != "none",
+                    capability not in {"none", "unknown"},
                     f"{capability} ({notes_text or 'verified in a scratch repo'})",
                 )
             )

@@ -91,6 +91,8 @@ def test_kv_and_none_capabilities(tmp_path: Path) -> None:
     )
     none = plan_bead(result, cache=cache, capability="none")
     assert none.metadata is None and none.metadata_kv == [] and none.add == ["waiting-on:mike"]
+    unknown = plan_bead(result, cache=cache, capability="unknown")
+    assert unknown.metadata is None and unknown.metadata_kv == []
 
 
 def test_metadata_shape(tmp_path: Path) -> None:
