@@ -155,3 +155,38 @@ def test_one_failure_does_not_abort(fake_bd: dict) -> None:
     assert report.applied == ["bs-e1.1"]
     assert report.failed and report.failed[0][0] == "bs-missing"
     assert cache.written_labels("bs-missing") == {}
+
+
+def test_written_labels_for_other_packs_survive_an_apply(tmp_path: Path) -> None:
+    """A run that only decides `waiting-on` must not forget that beadsort wrote `size:m`."""
+    cache = _cache(tmp_path)
+    cache.set_written_labels("bs-1", {"size": "m", "waiting-on": "mike"})
+    bead = Bead(id="bs-1", title="T", labels=("size:m", "waiting-on:mike"))
+    plan = plan_bead(_result(bead, {"waiting-on": "romy"}), cache=cache)
+    assert plan.written_after == {"size": "m", "waiting-on": "romy"}
+    assert plan.remove == ["waiting-on:mike"] and "size:m" not in plan.remove
+
+    # Later the size pack runs again: size:m is still ours, so it can be replaced.
+    cache.set_written_labels("bs-1", plan.written_after)
+    bead2 = Bead(id="bs-1", title="T", labels=("size:m", "waiting-on:romy"))
+    result = BeadResult(bead=bead2)
+    result.verdicts["size"] = Verdict(labels={"size": "l"})
+    result.packs_applied = ["size"]
+    plan2 = plan_bead(result, cache=cache)
+    assert plan2.remove == ["size:m"] and plan2.add == ["size:l"] and plan2.respected == []
+    assert plan2.written_after == {"size": "l", "waiting-on": "romy"}
+
+
+def test_json_metadata_resends_foreign_keys(tmp_path: Path) -> None:
+    """`--metadata` may replace the whole object in some bd versions: keep other keys."""
+    cache = _cache(tmp_path)
+    bead = Bead(
+        id="bs-1",
+        title="T",
+        metadata={"owner_notes": {"x": 1}, "beadsort": {"v": 1, "stale": True}},
+    )
+    plan = plan_bead(_result(bead, {"waiting-on": "mike"}), cache=cache)
+    assert plan.metadata is not None
+    assert plan.metadata["owner_notes"] == {"x": 1}
+    assert plan.metadata["beadsort"]["triage"]["labels"] == {"waiting-on": "mike"}
+    assert "stale" not in plan.metadata["beadsort"]

@@ -24,6 +24,10 @@ from beadsort.state import build_state, state_size
 PRICE_PER_MTOK_INPUT = 0.042
 QUESTION_SEP = "__"
 
+#: Every state section, always. The cache key covers the state, so the state must not
+#: depend on which packs happen to be enabled in a given run. `share` uses the same set.
+STATE_NEEDS = frozenset({"parent", "children", "open_blockers"})
+
 
 @dataclass(frozen=True)
 class JudgeResult:
@@ -117,12 +121,6 @@ def select_beads(
     return chosen
 
 
-def _needs(packs: Iterable[ResolvedPack]) -> set[str]:
-    """Every state section, always. The cache key covers the state, so the state must not
-    depend on which packs happen to be enabled in a given run."""
-    return {"parent", "children", "open_blockers"}
-
-
 def _context(
     bead: Bead, index: BeadIndex, config: BeadsortConfig, state: Mapping[str, Any]
 ) -> DeriveContext:
@@ -153,7 +151,7 @@ def run(
     """Classify `beads` with `packs`. `judge=None` or `offline=True` uses the cache only."""
     started = time.monotonic()
     report = RunReport(model=model)
-    needs = _needs(packs)
+    needs = STATE_NEEDS
     jobs: list[tuple[BeadResult, dict[str, Any], dict[str, str], dict[str, Mapping[str, Any]]]] = []
 
     for bead in beads:

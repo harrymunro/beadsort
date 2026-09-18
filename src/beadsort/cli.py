@@ -22,7 +22,15 @@ from beadsort.config import (
     write_template,
 )
 from beadsort.discover import discover, find_repo
-from beadsort.engine import BeadResult, RunReport, TypeSafeJudge, run, select_beads
+from beadsort.engine import (
+    QUESTION_SEP,
+    STATE_NEEDS,
+    BeadResult,
+    RunReport,
+    TypeSafeJudge,
+    run,
+    select_beads,
+)
 from beadsort.errors import ApiError, BeadsortError, PartialApplyError, UsageError
 from beadsort.output import Emitter, render_table
 from beadsort.packs import (
@@ -299,6 +307,9 @@ def run_cmd(
             continue
         config = loaded.config
         model_name = model or config.model
+        unknown = sorted(i for i in only if i not in loaded.index)
+        if unknown:
+            emitter.note(f"warning [{repo.name}]: bead(s) not found: {', '.join(unknown)}")
         beads = select_beads(
             loaded.index, config, statuses=statuses, types=types, only=only, limit=limit
         )
@@ -383,11 +394,19 @@ def run_cmd(
             human.append("dry run: nothing written. Add --apply to write labels into beads.")
         data.append(repo_data)
 
-    emitter.result("run", data if root else data[0], "\n".join(human))
+    payload = data if root else data[0]
+    error: BeadsortError | None = None
     if missing_key:
-        raise ApiError(KEY_HELP, code="no_api_key")
-    if partial:
-        raise PartialApplyError("some beads failed to apply; see failed list")
+        error = ApiError(KEY_HELP, code="no_api_key")
+    elif partial:
+        error = PartialApplyError("some beads failed to apply; see failed list")
+    if error is None:
+        emitter.result("run", payload, "\n".join(human))
+        return
+    # One envelope on stdout, never two: the run data rides inside the error envelope.
+    if not emitter.json_mode:
+        emitter.result("run", payload, "\n".join(human))
+    sys.exit(emitter.fail("run", error, data=payload))
 
 
 # ---- status / review -------------------------------------------------------------------
@@ -729,12 +748,11 @@ def share(session: Session, bead_id: str, pack_id: str | None, model: str | None
     bead = loaded.index.get(bead_id)
     if bead is None:
         raise UsageError(f"bead not found: {bead_id}")
-    needs = {n for p in loaded.packs for n in p.pack.state_needs}
-    state = build_state(bead, loaded.index, loaded.config, needs)
+    state = build_state(bead, loaded.index, loaded.config, STATE_NEEDS)
     questions: dict[str, Any] = {}
     for pack in loaded.packs:
         for qid, spec in pack.questions.items():
-            questions[f"{pack.id}__{qid}"] = spec
+            questions[f"{pack.id}{QUESTION_SEP}{qid}"] = spec
     url = playground_link(state, questions, model or loaded.config.model)
     session.emitter.note("note: the link embeds the bead text; share it only where that is fine")
     session.emitter.result(

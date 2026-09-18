@@ -132,8 +132,20 @@ def test_run_without_key_reports_how_to_get_one(
     (repo / ".beadsort" / "config.yaml").write_text(CONFIG, encoding="utf-8")
     code, out, _ = invoke("run", "--only", "bs-e1.1", "--json", cwd=repo)
     assert code == 4
-    # the run envelope prints first, then the error envelope
-    assert '"no_api_key"' in out
+    # exactly one envelope on stdout: the error, with the run data inside it
+    envelope = json.loads(out)
+    assert envelope["success"] is False and envelope["error"]["code"] == "no_api_key"
+    assert envelope["data"]["selected"] == 1
+    assert envelope["data"]["results"][0]["error"].startswith("offline")
+
+
+def test_run_warns_about_unknown_ids(configured: dict) -> None:
+    result = CliRunner().invoke(
+        main, ["-C", str(configured["repo"]), "run", "--only", "bs-nope"], catch_exceptions=False
+    )
+    assert result.exit_code == 0
+    assert "bead(s) not found: bs-nope" in result.output
+    assert "0 bead(s)" in result.output
 
 
 def test_review_and_status_for_one_bead(configured: dict) -> None:

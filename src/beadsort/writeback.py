@@ -138,6 +138,10 @@ def plan_bead(
     prev_written = cache.written_labels(bead.id)
     desired = result.labels
 
+    # Dimensions no pack decided this run keep their record: a label beadsort wrote for
+    # a pack that is not enabled today is still beadsort's to replace tomorrow.
+    plan.written_after = {d: v for d, v in prev_written.items() if d not in desired}
+
     for dim, value in sorted(desired.items()):
         current = labels_for_dimension(existing, dim)
         owned = {f"{dim}:{prev_written[dim]}"} & current if dim in prev_written else set()
@@ -159,7 +163,10 @@ def plan_bead(
     if wants_metadata and (metadata_changed or not cache.metadata_written(bead.id)):
         meta = build_metadata(result, cache)
         if capability == "json":
-            plan.metadata = meta
+            # Some bd versions replace the whole metadata object on `--metadata`. Re-send
+            # every key that is not ours so nothing anyone else stored is lost.
+            others = {k: v for k, v in bead.metadata.items() if k != METADATA_KEY}
+            plan.metadata = {**others, **meta}
         else:
             plan.metadata_kv = flatten_metadata(meta)
 

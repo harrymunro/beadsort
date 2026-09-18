@@ -17,7 +17,8 @@ applies_to:                 # all optional
   exclude_types: [epic]
 
 requires: [people]          # config keys the pack needs; skipped with a warning otherwise
-state: [parent, open_blockers, children]   # extra context to include; default [parent]
+state: [parent, open_blockers, children]   # which sections the questions read (documentation
+                                           # for readers; every section is always sent)
 
 questions:
   touches_money:
@@ -112,7 +113,7 @@ Each rule owns one dimension. A dimension may belong to only one enabled pack.
 
 Label values must match `[a-z0-9][a-z0-9._-]*` and contain no commas.
 
-When a rule is unsure (confidence below the threshold, a noul in the middle band, a composite near an edge), no label is written for that dimension and the bead is listed by `beadsort review`. With `on_uncertain: write_unsure` in the config, `<dimension>:unsure` is written instead.
+When a rule is unsure (confidence below the threshold, a noul in the middle band, a composite with an unsure score input), no label is written for that dimension and the bead is listed by `beadsort review`. With `on_uncertain: write_unsure` in the config, `<dimension>:unsure` is written instead.
 
 ## Thresholds
 

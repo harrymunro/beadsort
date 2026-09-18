@@ -84,3 +84,20 @@ def test_no_limit_means_no_trim(repo: Path) -> None:
     cfg = _config(repo, state=StateLimits(max_total_chars=0))
     state = build_state(idx.get("bs-e1.1"), idx, cfg)
     assert "[trimmed]" not in json.dumps(state)
+
+
+def test_huge_design_and_criteria_are_trimmed(repo: Path) -> None:
+    big = Bead(
+        id="big",
+        title="Huge",
+        description="short",
+        design="design text " * 4000,
+        acceptance_criteria="criteria text " * 2000,
+    )
+    idx = BeadIndex([big])
+    cfg = _config(repo, state=StateLimits(max_total_chars=6000))
+    state = build_state(big, idx, cfg)
+    assert state_size(state) <= 6000
+    assert state["bead"]["design"].endswith("[trimmed]")
+    assert state["bead"]["description"] == "short"
+    assert build_state(big, idx, cfg) == state

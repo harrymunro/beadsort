@@ -157,10 +157,11 @@ class BdClient:
         `use_cwd` runs bd inside the repo directory instead of passing `-C`, which bd
         refuses for a directory that is not yet a beads project (so: `init`).
         """
+        args = list(args)
         cmd = [self.bd_bin] if use_cwd else [self.bd_bin, "-C", str(self.repo)]
         if write:
             cmd += ["--actor", self.actor]
-        cmd += list(args)
+        cmd += args
         try:
             with repo_lock(self.repo):
                 self.calls += 1
@@ -181,7 +182,7 @@ class BdClient:
             ) from exc
         except subprocess.TimeoutExpired as exc:
             raise BdError(
-                f"bd timed out after {timeout or self.timeout:.0f}s: {' '.join(cmd[3:])}",
+                f"bd timed out after {timeout or self.timeout:.0f}s: {' '.join(args)}",
                 code="bd_timeout",
             ) from exc
         if proc.returncode != 0:
@@ -196,7 +197,7 @@ class BdClient:
             raise BdError(
                 message,
                 code=code,
-                detail={"args": cmd[3:], "returncode": proc.returncode},
+                detail={"args": args, "returncode": proc.returncode},
             )
         return proc.stdout
 

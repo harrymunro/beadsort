@@ -56,8 +56,8 @@ def build_state(
         "id": bead.id,
         "title": bead.title,
         "description": _cut(bead.description, desc_limit),
-        "acceptance_criteria": bead.acceptance_criteria or None,
-        "design": bead.design or None,
+        "acceptance_criteria": _cut(bead.acceptance_criteria, desc_limit) or None,
+        "design": _cut(bead.design, desc_limit) or None,
         "status": bead.status,
         "priority": bead.priority,
         "issue_type": bead.issue_type,
@@ -92,7 +92,7 @@ def build_state(
 
 def _fit(state: dict[str, Any], budget: int) -> dict[str, Any]:
     """Trim in a fixed order until the JSON fits: children, oldest updates, description,
-    blockers, parent excerpt. Each step is deterministic."""
+    design and acceptance criteria, blockers, parent excerpt. Each step is deterministic."""
     if budget <= 0 or state_size(state) <= budget:
         return state
     if state.get("children"):
@@ -108,6 +108,13 @@ def _fit(state: dict[str, Any], budget: int) -> dict[str, Any]:
     desc = bead["description"]
     if len(desc) > 400:
         bead["description"] = _cut(desc, max(400, len(desc) - overflow))
+    if state_size(state) <= budget:
+        return state
+    for key in ("design", "acceptance_criteria"):
+        text = bead.get(key) or ""
+        if len(text) > 400:
+            overflow = state_size(state) - budget
+            bead[key] = _cut(text, max(400, len(text) - overflow))
     if state_size(state) <= budget:
         return state
     if state.get("open_blockers"):
@@ -127,9 +134,11 @@ def _fit(state: dict[str, Any], budget: int) -> dict[str, Any]:
             trimmed = _cut(text, max(200, len(text) - overflow))
             bead["latest_update"] = {**bead["latest_update"], "text": trimmed}
             bead["updates"] = [bead["latest_update"]]
-    if state_size(state) > budget:
-        overflow = state_size(state) - budget
-        bead["description"] = _cut(
-            bead["description"], max(100, len(bead["description"]) - overflow)
-        )
+    for key in ("description", "design", "acceptance_criteria"):
+        if state_size(state) <= budget:
+            break
+        text = bead.get(key) or ""
+        if len(text) > 100:
+            overflow = state_size(state) - budget
+            bead[key] = _cut(text, max(100, len(text) - overflow))
     return state

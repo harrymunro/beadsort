@@ -60,9 +60,14 @@ class Emitter:
         if not self.quiet:
             sys.stderr.write(text.rstrip("\n") + "\n")
 
-    def fail(self, command: str, error: BeadsortError) -> int:
+    def fail(self, command: str, error: BeadsortError, data: Any = None) -> int:
+        """Report an error. `data` is what the command produced before failing, so a
+        JSON consumer still gets one envelope with everything in it."""
         if self.json_mode:
-            sys.stdout.write(json.dumps(error_envelope(command, error), indent=1, default=str))
+            envelope = error_envelope(command, error)
+            if data is not None:
+                envelope["data"] = data
+            sys.stdout.write(json.dumps(envelope, indent=1, default=str))
             sys.stdout.write("\n")
         else:
             sys.stderr.write(f"error [{error.code}]: {error.message}\n")

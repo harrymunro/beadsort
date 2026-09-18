@@ -62,6 +62,8 @@ def test_error_from_stderr_json(fake_bd: dict) -> None:
         bd.update("bs-nope", add_labels=["a:b"])
     assert excinfo.value.code == "not_found"
     assert excinfo.value.exit_code == 3
+    # the detail names the bd arguments, not the actor or -C plumbing
+    assert excinfo.value.detail["args"] == ["update", "bs-nope", "--add-label", "a:b"]
 
 
 def test_missing_binary() -> None:
