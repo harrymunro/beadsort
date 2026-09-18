@@ -12,9 +12,10 @@ applies_to:
 state: [parent, children]
 
 thresholds:
-  choice_act: 0.60        # blocking_party confidence to act on the category
-  choice_caution: 0.35    # below this: review only
-  person_act: 0.70        # stakeholder confidence to name a person (a wrong name is a wrong email)
+  choice_act: 0.55        # probability of the chosen category needed to act on it
+  choice_caution: 0.35    # below this: review only; between: needs corroboration
+  person_act: 0.50        # probability of the chosen person needed to name them
+  person_margin: 0.15     # and their lead over the runner-up (a wrong name is a wrong email)
   noul_yes: 0.70
   noul_no: 0.30
   done_review_band: [0.40, 0.70]

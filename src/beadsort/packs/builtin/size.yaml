@@ -13,12 +13,13 @@ state: [parent]
 thresholds:
   weights: {scope_breadth: 0.45, investigation_needed: 0.35, verification_effort: 0.20}
   buckets:
-    - {max: 0.30, value: s}
-    - {max: 0.62, value: m}
+    - {max: 0.40, value: s}
+    - {max: 0.70, value: m}
     - {value: l}
-  dead_zone: 0.04            # composite within this of an edge is unsure
-  min_score_confidence: 0.40 # any contributing Score below this is unsure
-  risk_conf: 0.50
+  dead_zone: 0.03            # composite within this of an edge is unsure
+  min_score_confidence: 0.20 # a contributing Score flatter than this is unsure (spread over
+                             # adjacent levels is normal for a Score and is not a reason)
+  risk_conf: 0.35
 
 questions:
   scope_breadth:

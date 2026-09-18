@@ -118,10 +118,9 @@ def select_beads(
 
 
 def _needs(packs: Iterable[ResolvedPack]) -> set[str]:
-    needs: set[str] = set()
-    for pack in packs:
-        needs.update(pack.pack.state_needs)
-    return needs
+    """Every state section, always. The cache key covers the state, so the state must not
+    depend on which packs happen to be enabled in a given run."""
+    return {"parent", "children", "open_blockers"}
 
 
 def _context(

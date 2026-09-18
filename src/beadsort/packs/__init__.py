@@ -199,6 +199,29 @@ class Answers:
     def describe_top(self, qid: str) -> str:
         return ", ".join(f"{k} {v:.2f}" for k, v in self.top(qid))
 
+    def top_p(self, qid: str) -> float:
+        """Probability of the chosen option. For many-option Choices this is the right
+        gate; `confidence` (spread over all options) punishes long option lists."""
+        chosen = self.choice(qid)
+        probs = self.probabilities(qid)
+        if chosen is not None and chosen in probs:
+            return probs[chosen]
+        top = self.top(qid, 1)
+        return top[0][1] if top else 0.0
+
+    def margin(self, qid: str) -> float:
+        """Lead of the chosen option over the best other option."""
+        chosen = self.choice(qid)
+        probs = self.probabilities(qid)
+        if chosen is None or chosen not in probs:
+            return 0.0
+        others = [v for k, v in probs.items() if k != chosen]
+        return probs[chosen] - (max(others) if others else 0.0)
+
+    def mass(self, qid: str, options: Iterable[str]) -> float:
+        probs = self.probabilities(qid)
+        return sum(probs.get(o, 0.0) for o in options)
+
 
 @dataclass(frozen=True)
 class DeriveContext:

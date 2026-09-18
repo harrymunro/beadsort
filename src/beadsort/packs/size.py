@@ -15,7 +15,7 @@ from beadsort.packs import Answers, DeriveContext, Verdict
 DIMENSIONS = ("size", "risk")
 RISK_LEVELS = ("low", "medium", "high")
 DEFAULT_WEIGHTS = {"scope_breadth": 0.45, "investigation_needed": 0.35, "verification_effort": 0.20}
-DEFAULT_BUCKETS = [{"max": 0.30, "value": "s"}, {"max": 0.62, "value": "m"}, {"value": "l"}]
+DEFAULT_BUCKETS = [{"max": 0.40, "value": "s"}, {"max": 0.70, "value": "m"}, {"value": "l"}]
 
 
 def _bucket_index(value: float, buckets: list[Mapping[str, Any]]) -> int:
@@ -33,14 +33,14 @@ def derive(answers: Answers, thresholds: Mapping[str, Any], ctx: DeriveContext) 
     verdict = Verdict(labels=dict.fromkeys(DIMENSIONS))
     weights = dict(thresholds.get("weights") or DEFAULT_WEIGHTS)
     buckets = list(thresholds.get("buckets") or DEFAULT_BUCKETS)
-    dead_zone = float(thresholds.get("dead_zone", 0.04))
-    min_conf = float(thresholds.get("min_score_confidence", 0.40))
-    risk_conf = float(thresholds.get("risk_conf", 0.50))
+    dead_zone = float(thresholds.get("dead_zone", 0.03))
+    min_conf = float(thresholds.get("min_score_confidence", 0.20))
+    risk_conf = float(thresholds.get("risk_conf", 0.35))
 
     kind = answers.choice("work_kind")
     verdict.meta["work_kind"] = kind
     umbrella = answers.p("is_umbrella") or 0.0
-    if (kind == "not_repo_work" and answers.conf("work_kind") >= 0.60) or umbrella >= 0.70:
+    if (kind == "not_repo_work" and answers.top_p("work_kind") >= 0.50) or umbrella >= 0.70:
         verdict.meta["skipped"] = "not repository work" if kind == "not_repo_work" else "umbrella"
         if ctx.bead.issue_type in {"bug", "feature"}:
             verdict.review.append(

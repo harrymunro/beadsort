@@ -153,8 +153,8 @@ def test_triage_possibly_satisfied_keeps_labels_but_reviews(repo: Path) -> None:
 # ---- size ---------------------------------------------------------------------------
 
 SIZE_BASE = {
-    "scope_breadth": score(1, 4, 0.9),
-    "investigation_needed": score(1, 4, 0.9),
+    "scope_breadth": score(2, 4, 0.9),
+    "investigation_needed": score(2, 4, 0.9),
     "verification_effort": score(1, 3, 0.9),
     "risk_of_breakage": score(1, 3, 0.9),
     "overall_effort": score(1, 3, 0.9),
@@ -170,7 +170,7 @@ def _size(repo: Path, bead: Bead | None = None, **overrides):  # type: ignore[no
 def test_size_medium_and_risk(repo: Path) -> None:
     v = _size(repo)
     assert v.labels == {"size": "m", "risk": "medium"}
-    assert 0.3 <= v.meta["composite"] <= 0.62
+    assert 0.4 <= v.meta["composite"] <= 0.7
 
 
 def test_size_small_and_large(repo: Path) -> None:
@@ -193,7 +193,7 @@ def test_size_small_and_large(repo: Path) -> None:
 
 
 def test_size_unsure_when_a_score_is_unsure(repo: Path) -> None:
-    v = _size(repo, scope_breadth=score(1, 4, 0.3))
+    v = _size(repo, scope_breadth=score(1, 4, 0.1))
     assert v.labels["size"] is None and "size" in v.uncertain
 
 
@@ -298,3 +298,33 @@ def test_agent_ready_precheck_on_open_blocker(repo: Path) -> None:
     assert precheck(_pack(repo, "agent-ready"), ctx) is not None
     assert ar_precheck({}, _ctx(repo)) is None
     assert precheck(_pack(repo, "size"), ctx) is None
+
+
+def test_agent_ready_yes_needs_only_low_blocking_mass(repo: Path) -> None:
+    """A hesitant `none` with little mass on blocking resources is still a yes."""
+    spread = {
+        "type": "choice",
+        "choice": "none",
+        "confidence": 0.3,
+        "probabilities": {
+            "none": 0.45,
+            "person_check": 0.30,
+            "secret_or_network": 0.15,
+            "unclear": 0.10,
+        },
+    }
+    v = _ar(repo, needs_external_resource=spread)
+    assert v.labels["agent-ready"] == "yes"
+    heavy = {
+        **spread,
+        "probabilities": {"none": 0.40, "private_file_or_data": 0.35, "secret_or_network": 0.25},
+    }
+    v = _ar(repo, needs_external_resource=heavy)
+    assert v.labels["agent-ready"] is None and "agent-ready" in v.uncertain
+
+
+def test_triage_person_needs_a_margin(repo: Path) -> None:
+    v = _triage(repo, stakeholder=choice("mike", 0.5, romy=0.45))
+    assert v.labels["waiting-on"] == "person"
+    v = _triage(repo, stakeholder=choice("mike", 0.55, romy=0.2))
+    assert v.labels["waiting-on"] == "mike"

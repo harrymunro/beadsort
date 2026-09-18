@@ -37,9 +37,9 @@ def precheck(thresholds: Mapping[str, Any], ctx: DeriveContext) -> Verdict | Non
 
 def derive(answers: Answers, thresholds: Mapping[str, Any], ctx: DeriveContext) -> Verdict:
     verdict = Verdict(labels=dict.fromkeys(DIMENSIONS))
-    yes = float(thresholds.get("yes", 0.30))  # noul at or below this: no obstacle
+    yes = float(thresholds.get("yes", 0.40))  # noul at or below this: no obstacle
     no = float(thresholds.get("no", 0.70))  # noul at or above this: confident obstacle
-    choice_act = float(thresholds.get("choice_act", 0.60))
+    choice_act = float(thresholds.get("choice_act", 0.55))
     spec_ready = float(thresholds.get("spec_ready", 1.5))
     spec_conf = float(thresholds.get("spec_conf", 0.50))
     spec_block = float(thresholds.get("spec_block", 1.0))
@@ -50,11 +50,12 @@ def derive(answers: Answers, thresholds: Mapping[str, Any], ctx: DeriveContext) 
     is_code = answers.p("is_code_work")
     is_code = 1.0 if is_code is None else is_code
     resource = answers.choice("needs_external_resource")
-    resource_conf = answers.conf("needs_external_resource")
+    resource_conf = answers.top_p("needs_external_resource")
+    blocking_mass = answers.mass("needs_external_resource", RESOURCE_BLOCKERS)
     contained = answers.p("scope_contained")
     contained = 1.0 if contained is None else contained
     target = answers.choice("target_repo")
-    target_conf = answers.conf("target_repo")
+    target_conf = answers.top_p("target_repo")
     spec_score = answers.score("spec_clarity")
     spec_c = answers.conf("spec_clarity")
     elsewhere = answers.p("spec_lives_elsewhere") or 0.0
@@ -66,6 +67,7 @@ def derive(answers: Answers, thresholds: Mapping[str, Any], ctx: DeriveContext) 
             "already_done": round(done, 3),
             "is_code_work": round(is_code, 3),
             "resource": resource,
+            "blocking_resource_mass": round(blocking_mass, 3),
             "spec_clarity": None if spec_score is None else round(spec_score, 2),
         }
     )
@@ -93,7 +95,7 @@ def derive(answers: Answers, thresholds: Mapping[str, Any], ctx: DeriveContext) 
     elif resource in RESOURCE_BLOCKERS and resource_conf >= choice_act:
         blocker = RESOURCE_BLOCKERS[resource]
     elif (
-        contained <= yes
+        contained <= 0.30
         and target not in {None, "this_repo", "unclear", "not_repo_work"}
         and target_conf >= choice_act
     ):
@@ -114,12 +116,10 @@ def derive(answers: Answers, thresholds: Mapping[str, Any], ctx: DeriveContext) 
         and owner <= yes
         and done <= yes
         and is_code >= no
-        and resource in {"none", "person_check"}
-        and resource_conf >= choice_act
+        and blocking_mass <= 0.50
         and spec_score is not None
         and spec_score >= spec_ready
         and spec_c >= spec_conf
-        and contained >= 0.50
     )
     if clean:
         verdict.labels["agent-ready"] = "yes"
@@ -138,11 +138,9 @@ def derive(answers: Answers, thresholds: Mapping[str, Any], ctx: DeriveContext) 
         reasons.append(f"already done p={done:.2f}")
     if yes < is_code < no:
         reasons.append(f"code work p={is_code:.2f}")
-    if resource not in {"none", "person_check"} or resource_conf < choice_act:
-        reasons.append(f"resource {resource} conf={resource_conf:.2f}")
+    if blocking_mass > 0.50:
+        reasons.append(f"blocking resource mass {blocking_mass:.2f} ({resource})")
     if spec_score is None or spec_score < spec_ready or spec_c < spec_conf:
         reasons.append(f"spec clarity {spec_score} conf={spec_c:.2f}")
-    if contained < 0.50:
-        reasons.append(f"scope contained p={contained:.2f}")
     verdict.review.append("agent-ready unsure: " + "; ".join(reasons))
     return verdict

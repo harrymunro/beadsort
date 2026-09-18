@@ -74,7 +74,7 @@ def derive(answers: Answers, thresholds: Mapping[str, Any], ctx: DeriveContext) 
 
     done_p = answers.p("already_done") or 0.0
     category = answers.choice("blocking_party")
-    cat_conf = answers.conf("blocking_party")
+    cat_conf = answers.top_p("blocking_party")  # probability of the chosen category
     verdict.meta["category"] = category
     verdict.meta["confidence"] = round(cat_conf, 3)
 
@@ -136,10 +136,17 @@ def derive(answers: Answers, thresholds: Mapping[str, Any], ctx: DeriveContext) 
 
     # 6. Map the category to labels.
     if category == "named_person":
-        st_conf = answers.conf("stakeholder")
-        if stakeholder in ctx.config.people and st_conf >= person_act and waiting_p >= 0.50:
+        st_conf = answers.top_p("stakeholder")
+        st_margin = answers.margin("stakeholder")
+        person_margin = float(_t(thresholds, "person_margin", 0.15))
+        if (
+            stakeholder in ctx.config.people
+            and st_conf >= person_act
+            and st_margin >= person_margin
+            and waiting_p >= 0.50
+        ):
             verdict.labels["waiting-on"] = stakeholder
-        elif stakeholder == "unspecified" and st_conf >= 0.60:
+        elif stakeholder == "unspecified" and st_conf >= person_act:
             verdict.labels["waiting-on"] = "owner"
             verdict.labels["owner-kind"] = "decision"
             verdict.meta["reason"] = "whom to ask"
@@ -158,7 +165,7 @@ def derive(answers: Answers, thresholds: Mapping[str, Any], ctx: DeriveContext) 
         kind = answers.choice("owner_action_kind")
         if kind:
             verdict.meta["owner_action"] = kind
-            if kind == "decision" and answers.conf("owner_action_kind") >= 0.60:
+            if kind == "decision" and answers.top_p("owner_action_kind") >= 0.60:
                 verdict.review.append("admin category but action kind says decision")
     elif category == "coding_agent":
         verdict.labels["waiting-on"] = "agent"

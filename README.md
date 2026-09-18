@@ -4,8 +4,7 @@
 
 **The intelligence layer for [beads](https://github.com/gastownhall/beads).**
 
-[![PyPI version](https://img.shields.io/pypi/v/beadsort)](https://pypi.org/project/beadsort/)
-[![Python](https://img.shields.io/pypi/pyversions/beadsort)](https://pypi.org/project/beadsort/)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](pyproject.toml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![CI](https://github.com/harrymunro/beadsort/actions/workflows/ci.yml/badge.svg)](https://github.com/harrymunro/beadsort/actions/workflows/ci.yml)
 
@@ -69,7 +68,7 @@ bd state fls-8yih size                      # -> s
 ## Running it
 
 ```sh
-uv tool install beadsort            # or: pipx install beadsort / pip install beadsort
+uv tool install git+https://github.com/harrymunro/beadsort   # PyPI release coming
 export TYPESAFE_API_KEY=...         # see docs/bring-your-own-key.md
 
 cd your-beads-repo

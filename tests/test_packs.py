@@ -137,7 +137,7 @@ def test_threshold_overrides_from_config(repo: Path) -> None:
     pack = load_pack_text(builtin_pack_text("size"), source="size")
     resolved = resolve_pack(pack, _config(repo), PackRef(id="size", thresholds={"dead_zone": 0.2}))
     assert resolved.thresholds["dead_zone"] == 0.2
-    assert resolved.thresholds["risk_conf"] == 0.5
+    assert resolved.thresholds["risk_conf"] == 0.35
 
 
 def test_answers_helpers() -> None:
@@ -163,3 +163,6 @@ def test_answers_helpers() -> None:
     assert a.normalised_score("s") == 0.75 and a.levels("s") == 3
     assert a.p("n") == 0.9 and round(a.conf("n"), 2) == 0.8
     assert a.choice("missing") is None and a.p("missing") is None and a.conf("missing") == 0.0
+    assert (
+        a.top_p("c") == 0.8 and round(a.margin("c"), 2) == 0.6 and a.mass("c", ["y", "zzz"]) == 0.2
+    )

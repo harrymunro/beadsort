@@ -11,9 +11,9 @@ applies_to:
 state: [parent, open_blockers]
 
 thresholds:
-  yes: 0.30        # a yes/no answer at or below this means "no obstacle"
+  yes: 0.40        # a yes/no answer at or below this means "no obstacle"
   no: 0.70         # at or above this means "confident obstacle"
-  choice_act: 0.60
+  choice_act: 0.55 # probability of the chosen resource/repo option needed to block on it
   spec_ready: 1.5  # spec_clarity score (0..3) needed for a clean yes
   spec_conf: 0.50
   spec_block: 1.0  # at or below this, with confidence, the blocker is spec
