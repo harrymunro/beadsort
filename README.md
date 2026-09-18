@@ -12,7 +12,11 @@
 
 ---
 
-<img width="1536" height="1024" alt="beadsort" src="https://github.com/user-attachments/assets/08941873-4aa1-444f-8d9e-79a92c49ada1" />
+
+
+https://github.com/user-attachments/assets/47e7dbce-bb25-4d2a-8311-05b14f8076de
+
+
 
 
 beadsort labels every bead with fast, calibrated judgments so `bd ready` hands agents only the work they can actually do, and hands you only the decisions that are actually yours.
