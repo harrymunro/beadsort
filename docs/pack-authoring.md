@@ -72,15 +72,15 @@ The state for one bead looks like this. Point questions at parts of it with back
 {
   "project": {"name": "...", "summary": "...", "owner": "Harry", "agent_names": ["Notarius"]},
   "bead": {
-    "id": "fls-1234", "title": "...", "description": "...",
+    "id": "app-1234", "title": "...", "description": "...",
     "acceptance_criteria": null, "design": null,
     "status": "open", "priority": 2, "issue_type": "task",
     "latest_update": {"date": "2026-09-05", "source": "note", "author": "Notarius", "text": "..."},
     "updates": [ {"date": "2026-09-05", ...}, {"date": "2026-08-20", ...} ]
   },
-  "parent": {"id": "fls-12", "title": "...", "description_excerpt": "...", "status": "open"},
-  "open_blockers": [{"id": "fls-99", "title": "...", "status": "open"}],
-  "children": [{"id": "fls-1234.1", "title": "...", "status": "closed"}]
+  "parent": {"id": "app-12", "title": "...", "description_excerpt": "...", "status": "open"},
+  "open_blockers": [{"id": "app-99", "title": "...", "status": "open"}],
+  "children": [{"id": "app-1234.1", "title": "...", "status": "closed"}]
 }
 ```
 

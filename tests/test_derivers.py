@@ -21,8 +21,8 @@ from beadsort.packs.agent_ready import precheck as ar_precheck
 from tests.fakes import choice, noul, score
 
 PEOPLE = {
-    "mike": Person("mike", "Mike Lefler", ("Mike",), "sponsor"),
-    "romy": Person("romy", "Romy", (), "CRM"),
+    "mike": Person("mike", "Mike Tanner", ("Mike",), "sponsor"),
+    "lena": Person("lena", "Lena", (), "CRM"),
 }
 
 
@@ -122,7 +122,7 @@ def test_triage_caution_band_needs_corroboration(repo: Path) -> None:
 
 
 def test_triage_person_unclear_falls_back_to_coarse_label(repo: Path) -> None:
-    v = _triage(repo, stakeholder=choice("mike", 0.4, romy=0.4))
+    v = _triage(repo, stakeholder=choice("mike", 0.4, lena=0.4))
     assert v.labels["waiting-on"] == "person" and "person unclear" in v.review[0]
     v = _triage(repo, stakeholder=choice("other_named", 0.9))
     assert v.labels["waiting-on"] == "person"
@@ -276,8 +276,8 @@ def test_agent_ready_precedence_human_beats_spec(repo: Path) -> None:
 
 
 def test_agent_ready_off_board(repo: Path) -> None:
-    v = _ar(repo, scope_contained=noul(0.1), target_repo=choice("propgen", 0.9))
-    assert v.labels["blocker"] == "off-board" and v.meta["target_repo"] == "propgen"
+    v = _ar(repo, scope_contained=noul(0.1), target_repo=choice("proposals", 0.9))
+    assert v.labels["blocker"] == "off-board" and v.meta["target_repo"] == "proposals"
 
 
 def test_agent_ready_unsure_band(repo: Path) -> None:
@@ -324,7 +324,7 @@ def test_agent_ready_yes_needs_only_low_blocking_mass(repo: Path) -> None:
 
 
 def test_triage_person_needs_a_margin(repo: Path) -> None:
-    v = _triage(repo, stakeholder=choice("mike", 0.5, romy=0.45))
+    v = _triage(repo, stakeholder=choice("mike", 0.5, lena=0.45))
     assert v.labels["waiting-on"] == "person"
-    v = _triage(repo, stakeholder=choice("mike", 0.55, romy=0.2))
+    v = _triage(repo, stakeholder=choice("mike", 0.55, lena=0.2))
     assert v.labels["waiting-on"] == "mike"

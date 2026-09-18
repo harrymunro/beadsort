@@ -47,7 +47,7 @@ def _config(repo: Path, **overrides) -> BeadsortConfig:  # type: ignore[no-untyp
     base = BeadsortConfig(
         repo=repo,
         owner="Harry",
-        people={"mike": Person("mike", "Mike Lefler", ("Mike",), "sponsor")},
+        people={"mike": Person("mike", "Mike Tanner", ("Mike",), "sponsor")},
     )
     return BeadsortConfig(**{**base.__dict__, **overrides})
 
@@ -64,7 +64,7 @@ def test_builtins_validate_and_substitute_owner(repo: Path, pack_id: str) -> Non
         assert "Harry" in blob
         assert (
             resolved.questions["stakeholder"]["criteria"]["mike"]
-            == "Mike Lefler, also written Mike: sponsor"
+            == "Mike Tanner, also written Mike: sponsor"
         )
         # static options come after the injected people
         assert list(resolved.questions["stakeholder"]["criteria"])[-1] == "nobody"
@@ -98,9 +98,9 @@ def test_when_gated_question_is_dropped_without_repos(repo: Path) -> None:
     pack = load_pack_text(builtin_pack_text("agent-ready"), source="agent-ready")
     without = resolve_pack(pack, _config(repo))
     assert "target_repo" not in without.questions
-    with_repos = resolve_pack(pack, _config(repo, repos={"propgen": "RFQ tool"}))
+    with_repos = resolve_pack(pack, _config(repo, repos={"proposals": "RFQ tool"}))
     criteria = with_repos.questions["target_repo"]["criteria"]
-    assert list(criteria)[:2] == ["this_repo", "propgen"]
+    assert list(criteria)[:2] == ["this_repo", "proposals"]
     assert list(criteria)[-1] == "unclear"
 
 

@@ -1,30 +1,31 @@
-# Example .beadsort/config.yaml for a consultancy engagement tracked in beads.
+# Example .beadsort/config.yaml for a small products team tracked in beads.
 # Copy to <repo>/.beadsort/config.yaml and edit. Never put an API key here.
+# Every name below is fictional.
 version: 1
 
 owner: "Harry"
 
 project:
-  name: FLS
+  name: Acme
   summary: >-
-    Consultancy engagement with a client's products business line: four hosted tools
-    (PropGen, Scout, Horizon, ProcessLabz) plus advisory material, tracked in this repo.
+    Internal tools for a products team: a proposal generator, an enquiry triage app and
+    an order forecast, plus advisory notes, tracked in this repo.
   conventions: >-
     Descriptions carry a '## Friendly Summary' then '## Technical' section. Updates are
     dated; the newest update is the current truth and overrides the description.
   agent_names: [Notarius, Scriba, Consul, Censor, Clio, Thalia, Archimedes]
 
 people:
-  mike:      {name: "Mike Lefler",  aliases: [Mike],                 role: "programme sponsor, client side"}
-  james:     {name: "James Smyth",  aliases: ["James Smith", James],  role: "sales intelligence lead, client side"}
-  josiane:   {name: "Josiane",      aliases: [],                      role: "risk and compliance; Scout business owner"}
-  romy:      {name: "Romy",         aliases: [],                      role: "CRM rules of use; PropGen and Horizon business owner"}
-  sebastian: {name: "Sebastian",    aliases: [],                      role: "head of PMO IT, client side"}
+  dana:   {name: "Dana Whitfield", aliases: [Dana],                   role: "programme sponsor"}
+  priya:  {name: "Priya Nair",     aliases: ["Priya N", Priya],       role: "sales intelligence lead"}
+  tomas:  {name: "Tomas",          aliases: [],                       role: "risk and compliance; enquiry app business owner"}
+  lena:   {name: "Lena",           aliases: [],                       role: "CRM rules of use; proposal and forecast business owner"}
+  sam:    {name: "Sam",            aliases: [],                       role: "head of IT"}
 
 repos:
-  propgen: "RFQ to priced proposal (pg- beads)"
-  scout: "enquiry pack to opportunity brief (sc- beads)"
-  horizon: "order intake forecast (as- beads)"
+  proposals: "RFQ to priced proposal (pr- beads)"
+  enquiries: "enquiry pack to opportunity brief (en- beads)"
+  forecast: "order intake forecast (fc- beads)"
 
 packs:
   - triage

@@ -16,7 +16,7 @@ CONFIG = """
 owner: Harry
 project: {name: Test, summary: "A test backlog."}
 people:
-  mike: {name: Mike Lefler, aliases: [Mike], role: sponsor}
+  mike: {name: Mike Tanner, aliases: [Mike], role: sponsor}
 packs: [triage, size, agent-ready]
 """
 

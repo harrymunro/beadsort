@@ -38,8 +38,8 @@ def test_truth_sources(tmp_path: Path) -> None:
 
 
 def test_evaluate_categorical() -> None:
-    truth = {"a": "mike", "b": "mike", "c": "romy", "d": "romy", "e": "mike"}
-    predictions = {"a": "mike", "b": "romy", "c": "romy", "d": None, "e": "mike"}
+    truth = {"a": "mike", "b": "mike", "c": "lena", "d": "lena", "e": "mike"}
+    predictions = {"a": "mike", "b": "lena", "c": "lena", "d": None, "e": "mike"}
     report = evaluate(
         "waiting-on",
         predictions,
@@ -51,7 +51,7 @@ def test_evaluate_categorical() -> None:
     assert report.per_value["mike"]["precision"] == 1.0 and report.per_value["mike"][
         "recall"
     ] == pytest.approx(2 / 3, abs=1e-3)
-    assert report.per_value["romy"]["precision"] == 0.5
+    assert report.per_value["lena"]["precision"] == 0.5
     assert report.uncovered_wrong_if_forced == 1
     assert report.disagreements[0]["id"] == "b"
     bands = {b["band"]: b for b in report.bands}

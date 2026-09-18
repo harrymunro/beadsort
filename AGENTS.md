@@ -17,6 +17,8 @@ The intelligence layer for beads: a Python CLI that classifies beads with a Syst
 
 `src/beadsort/`: `cli.py` (commands only), `bd.py` (subprocess adapter with per-repo lock), `beads.py` (model + labels), `updates.py` (notes newest first), `state.py` (what the model sees), `packs/` (loader, declarative rules, built-in YAML + derivers), `engine.py` (run loop, cache keys, model client), `cache.py`, `writeback.py` (fence), `eval.py`, `share.py` (vendored lz-string), `doctor.py` (metadata probe).
 
+`skills/beadsort/SKILL.md` is the skill users install into their agents; its commands are checked against the CLI by `tests/test_skill.py`, so update both together. Every name, bead id and project in examples, docs, packs and tests is fictional; never paste real client material into the repo.
+
 <!-- BEGIN FRIENDLY SUMMARY POLICY -->
 ## Friendly Summary policy
 

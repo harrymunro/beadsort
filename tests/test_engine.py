@@ -10,7 +10,7 @@ from beadsort.packs import load_enabled_packs
 from tests.conftest import load_fixture_issues
 from tests.fakes import FakeJudge, choice, noul, score
 
-PEOPLE = {"mike": Person("mike", "Mike Lefler", ("Mike",), "sponsor")}
+PEOPLE = {"mike": Person("mike", "Mike Tanner", ("Mike",), "sponsor")}
 
 
 def _setup(repo: Path, **kw):  # type: ignore[no-untyped-def]

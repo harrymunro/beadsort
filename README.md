@@ -19,19 +19,38 @@ beadsort labels every bead with fast, calibrated judgments so `bd ready` hands a
 
 Typed answers, not prose. Re-run the whole backlog in seconds. Written straight back into beads.
 
+## Agent instructions
+
+Paste this into Claude Code, Codex, Cursor or any coding agent that can run shell commands in your beads repo. It installs the [beadsort skill](skills/beadsort/SKILL.md) shipped in this repo, so the agent drives the tool the same way every time: dry run first, labels written only when you say so, and your API key never handled as text.
+
+```text
+Set up beadsort in this repository and run it on the backlog.
+
+1. Install the beadsort skill, then read it and follow it for everything below:
+   mkdir -p .claude/skills/beadsort && curl -fsSL https://raw.githubusercontent.com/harrymunro/beadsort/main/skills/beadsort/SKILL.md -o .claude/skills/beadsort/SKILL.md
+   If you load skills from a different directory, put the file there instead.
+2. Install the tool: uv tool install git+https://github.com/harrymunro/beadsort
+3. If TYPESAFE_API_KEY is not set, stop and tell me how to get one. Never ask me to paste a key into the chat, and never write one into a file.
+4. Run beadsort config init, fill in .beadsort/config.yaml from what you can see in the repo and in bd, then run beadsort doctor --probe and fix what it reports.
+5. Run beadsort run (a dry run) and beadsort review, and give me a short summary of what would change, what it would cost, and what the model was unsure about.
+6. Do not run beadsort run --apply until I say so, and never use --force.
+```
+
+The skill is a single Markdown file in the [Agent Skills](https://agentskills.io) format: `skills/beadsort/SKILL.md`. It covers setup, the dry run and apply flow, what every label means, the JSON envelope and exit codes, and what to do when something goes wrong. Copy it into whatever directory your agent loads skills from; Claude Code reads `.claude/skills/<name>/SKILL.md` in the project or `~/.claude/skills/<name>/SKILL.md` for every project.
+
 ```text
 $ beadsort run
 bead         title                                     dimension    change            note
 -----------  ----------------------------------------  -----------  ----------------  ------
-tq6e.11  Bring a named cyber security person…      waiting-on   - -> jim
-tq6e.11  Bring a named cyber security person…      ask-urgency  - -> blocking
-tq6e.22  Send the retention email to Sebastian     stale        - -> done
-jytu.2   Get the client list from Joe              waiting-on   joe -> tim
-m3cc.1   Decide where the forecast lives           waiting-on   - -> owner
-m3cc.1   Decide where the forecast lives           owner-kind   - -> decision
-8yih     Exclude epics from the workable count     size         - -> s
-8yih     Exclude epics from the workable count     agent-ready  - -> yes
-127 bead(s), 127 model call(s), 0 cached, 233,410 input tokens (~$0.0098)
+app-tq6e.11  Bring a named security reviewer on board  waiting-on   - -> sam
+app-tq6e.11  Bring a named security reviewer on board  ask-urgency  - -> blocking
+app-tq6e.22  Send the retention email to Sam           stale        - -> done
+app-jytu.2   Get the account list from Dana            waiting-on   dana -> lena
+app-m3cc.1   Decide where the forecast lives           waiting-on   - -> owner
+app-m3cc.1   Decide where the forecast lives           owner-kind   - -> decision
+app-8yih     Exclude epics from the workable count     size         - -> s
+app-8yih     Exclude epics from the workable count     agent-ready  - -> yes
+127 bead(s), 127 model call(s), 0 cached, 233410 input tokens (~$0.0098), 41.3s
 6 bead(s) need a human look: `beadsort review`
 dry run: nothing written. Add --apply to write labels into beads.
 ```
@@ -40,7 +59,7 @@ dry run: nothing written. Add --apply to write labels into beads.
 
 A beads backlog knows more than its labels do. Every bead says, somewhere in its text, who it is waiting on, how big it is and whether an agent could pick it up cold. Nobody labels that by hand for long, and asking a chat model to do it is slow, expensive and drifts from one bead to the next.
 
-beadsort asks a [System One model](https://docs.typesafe.ai/concepts/system-one) instead: a model built to answer typed questions with calibrated probabilities rather than to write text. Each bead becomes a JSON state; each pack is a set of atomic questions about it; every question is answered independently in one request. The answers come back as labels like `waiting-on:mike`, `size:m` and `agent-ready:no`, plus the probabilities behind them. The whole backlog costs about a cent, so labels stop being state you maintain and become a view you regenerate.
+beadsort asks a [System One model](https://docs.typesafe.ai/concepts/system-one) instead: a model built to answer typed questions with calibrated probabilities rather than to write text. Each bead becomes a JSON state; each pack is a set of atomic questions about it; every question is answered independently in one request. The answers come back as labels like `waiting-on:dana`, `size:m` and `agent-ready:no`, plus the probabilities behind them. The whole backlog costs about a cent, so labels stop being state you maintain and become a view you regenerate.
 
 ### 🧑‍💻 For Humans
 
@@ -59,10 +78,10 @@ beadsort asks a [System One model](https://docs.typesafe.ai/concepts/system-one)
 
 ```sh
 bd ready -l agent-ready:yes                 # only work an agent can start cold
-bd ready --exclude-label waiting-on:mike    # skip anything waiting on Mike
+bd ready --exclude-label waiting-on:dana    # skip anything waiting on Dana
 bd list -l waiting-on:owner                 # decisions and admin only you can do
 bd query "label=size:s AND status=open"     # small open work
-bd state 8yih size                          # -> s
+bd state app-8yih size                      # -> s
 ```
 
 ## Running it
@@ -114,11 +133,11 @@ Probabilities, confidence, the pack version and the model that answered go into 
 ```yaml
 owner: "Harry"                       # substituted for {{owner}} in every question
 project:
-  summary: "Consultancy engagement: four hosted tools plus advisory material."
+  summary: "Internal tools for a products team: a proposal generator and an order forecast."
   agent_names: [Notarius, Scriba]    # update authors that are never stakeholders
 people:                              # who a bead can be waiting on
-  mike:  {name: "Mike Lefler", aliases: [Mike], role: "programme sponsor"}
-  romy:  {name: "Romy", role: "CRM owner"}
+  dana:  {name: "Dana Whitfield", aliases: [Dana], role: "programme sponsor"}
+  lena:  {name: "Lena", role: "CRM owner"}
 packs: [triage, size, agent-ready]
 model: jev-latest                    # pin a version once thresholds are tuned
 ```

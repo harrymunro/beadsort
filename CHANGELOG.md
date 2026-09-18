@@ -6,6 +6,10 @@ All notable changes to beadsort are recorded here. The format follows
 ## [Unreleased]
 
 ### Added
+- `skills/beadsort/SKILL.md`: a standard Agent Skills file that teaches a coding agent to
+  install, configure and run beadsort (dry run first, `--apply` only on a yes, never
+  `--force`, never the key as text). The README opens with a paste-in prompt that installs it.
+  `tests/test_skill.py` keeps the skill's commands in step with the CLI.
 - `run` (dry run by default, `--apply` to write), `status`, `review`, `eval`, `share`,
   `packs list|show|validate`, `config init`, `doctor --probe`.
 - Built-in packs `triage`, `size` and `agent-ready`, each with a Python deriver and
@@ -20,6 +24,11 @@ All notable changes to beadsort are recorded here. The format follows
   option's probability, Score gates only reject flat distributions, the resource question
   uses probability mass on blocking options, and the cache key no longer depends on which
   packs are enabled.
+
+### Changed
+- Every example bead, person and project in the README, docs, example config, built-in
+  pack criteria and tests is now fictional. `triage` and `agent-ready` are at pack
+  version 2 because their example wording changed; cached answers are re-asked.
 
 ### Fixed
 - The fence's record of what beadsort wrote survives a run that covers other packs; a

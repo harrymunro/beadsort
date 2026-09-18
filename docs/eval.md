@@ -18,7 +18,7 @@
 ```sh
 # Did triage find the beads I had labelled 'human'?
 beadsort eval --pack triage --dimension waiting-on \
-  --truth-label human --positive person,owner,mike,james,josiane --status open
+  --truth-label human --positive person,owner,mike,dana,priya --status open
 
 # Exact stakeholder, from old ad hoc labels like mike-question
 beadsort eval --pack triage --dimension waiting-on --truth-json truth/waiting-on.json

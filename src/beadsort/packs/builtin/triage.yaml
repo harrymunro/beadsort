@@ -1,5 +1,5 @@
 id: triage
-version: 1
+version: 2
 description: >-
   Who is this bead waiting on: a named person, {{owner}}, or a coding agent. Typed
   successor to a COMMS / OWNER / CODE rubric. Also flags asks already satisfied and
@@ -48,10 +48,10 @@ questions:
           has already arrived according to `bead.latest_update.text`; a group with nobody
           identifiable, such as 'raise with the client' (owner_decision).
         examples:
-          - "Ask Josiane for a typical pricing model to bank in"
-          - "Balaji agreed to send a zipped RFQ pack; waiting for the attachment"
-          - "Mike needs to name the person who owns costing"
-          - "The email is drafted; {{owner}} has to send it to Sebastian"
+          - "Ask Priya for a typical pricing model to bank in"
+          - "Tomas agreed to send a zipped sample pack; waiting for the attachment"
+          - "Dana needs to name the person who owns costing"
+          - "The email is drafted; {{owner}} has to send it to Lena"
       owner_decision:
         what: >-
           {{owner}} must make a judgement call before anything else can happen: direction,
@@ -64,7 +64,7 @@ questions:
         examples:
           - "Options: (a) a board fed by export, (b) intake mirrored in, (c) both. {{owner}} to choose the shape"
           - "Decide the CI capacity strategy"
-          - "raise with FLS IT - nobody named"
+          - "raise with the client's IT team - nobody named"
       owner_admin:
         what: >-
           {{owner}} must do something by hand that a coding agent cannot: issue or rotate
@@ -153,15 +153,15 @@ questions:
           A person other than {{owner}} must answer, send, confirm or agree before the bead
           can move, or {{owner}} still has to ask or tell them
         examples:
-          - "waiting for the attachment Balaji promised"
-          - "James will propose the names"
-          - "draft is ready; send it to Sebastian"
+          - "waiting for the attachment Tomas promised"
+          - "Dana will propose the names"
+          - "draft is ready; send it to Lena"
       "false":
         what: >-
           Nothing waits on another person: the next step sits with {{owner}} alone or with
           an agent, or the response has already arrived
         examples:
-          - "Balaji's pack arrived; build the fixture"
+          - "Tomas's pack arrived; build the fixture"
           - "{{owner}} to choose between the listed options"
           - "rotate the credentials"
 
@@ -182,7 +182,7 @@ questions:
           decided, landed elsewhere, or says the bead can close
         examples:
           - "Evidence it was sent; may close this bead"
-          - "material received; the client names are known"
+          - "material received; the list of names is known"
           - "handled outside the tracker"
       "false":
         what: >-
@@ -240,7 +240,7 @@ questions:
         what: >-
           The work is conversation, decision, purchase, review by a person or a document
           held outside the repository
-        examples: ["chat with Mike and James on 9 Sep", "name the costing owner"]
+        examples: ["chat with Dana and Priya on 9 Sep", "name the costing owner"]
 
   code_can_start_now:
     type: noul
@@ -257,7 +257,7 @@ questions:
         what: >-
           The bead says the work waits for an answer, a file, data, access or a go-ahead
           that has not arrived
-        examples: ["the client names sit in an attachment not yet passed on", "needs the field list before Phase 2 is built"]
+        examples: ["the names sit in an attachment not yet passed on", "needs the field list before the second phase is built"]
 
   decision_needs_owner:
     type: noul
@@ -268,7 +268,7 @@ questions:
     criteria:
       "true":
         what: "The choice is about what is worth doing, how it is named, who owns it, or what the client should be told"
-        examples: ["whether the forecast lives inside Horizon or as its own tool", "which of three board shapes to adopt"]
+        examples: ["whether the forecast lives inside the main app or as its own tool", "which of three board shapes to adopt"]
       "false":
         what: "The choice is technical, the bead already implies the answer, or the bead says the answer is obvious once implemented"
         examples: ["pick the cheapest correct fix", "follow the pattern in the sibling module"]
@@ -294,7 +294,7 @@ questions:
     criteria:
       "true":
         what: "The bead or its updates name the replacement, the new home, or the change that made it moot"
-        examples: ["moved to the propgen repository's own tracker", "the newer film already uses the corrected figure"]
+        examples: ["moved to the proposals repository's own tracker", "the newer film already uses the corrected figure"]
       "false":
         what: "No replacement or new home is named; the work is still described as needed"
 

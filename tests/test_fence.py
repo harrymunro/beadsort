@@ -58,6 +58,6 @@ def test_own_label_is_removed_when_value_changes(tmp_path: Path) -> None:
 
 def test_non_dimension_labels_are_untouched(tmp_path: Path) -> None:
     cache = CacheStore(tmp_path / "cache.json").load()
-    bead = Bead(id="bs-1", title="T", labels=("human", "mike-question", "fls-abcd"))
+    bead = Bead(id="bs-1", title="T", labels=("human", "mike-question", "app-abcd"))
     plan = plan_bead(_result(bead, "s"), cache=cache, capability="none")
     assert plan.remove == [] and plan.add == ["size:s"]

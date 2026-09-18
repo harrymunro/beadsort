@@ -31,11 +31,11 @@ def test_full_file(repo: Path) -> None:
         repo,
         """
 owner: Harry
-project: {name: FLS, summary: "A consultancy", agent_names: [Notarius]}
+project: {name: Acme, summary: "A small products team", agent_names: [Notarius]}
 people:
-  mike: {name: Mike Lefler, aliases: [Mike], role: sponsor}
-  romy: "CRM owner"
-repos: {propgen: "RFQ tool"}
+  mike: {name: Mike Tanner, aliases: [Mike], role: sponsor}
+  lena: "CRM owner"
+repos: {proposals: "RFQ tool"}
 packs:
   - triage
   - {id: size, thresholds: {dead_zone: 0.1}}
@@ -51,8 +51,8 @@ mystery: 1
     )
     cfg = load_config(repo)
     assert cfg.owner == "Harry"
-    assert cfg.people["mike"].describe() == "Mike Lefler, also written Mike: sponsor"
-    assert cfg.people["romy"].name == "Romy" and cfg.people["romy"].role == "CRM owner"
+    assert cfg.people["mike"].describe() == "Mike Tanner, also written Mike: sponsor"
+    assert cfg.people["lena"].name == "Lena" and cfg.people["lena"].role == "CRM owner"
     assert cfg.packs[1].thresholds == {"dead_zone": 0.1}
     assert cfg.packs[2].path == "./packs/custom.yaml" and cfg.packs[2].key == "custom"
     assert cfg.model == "jev-1.13.0" and cfg.workers == 3

@@ -1,5 +1,5 @@
 id: agent-ready
-version: 1
+version: 2
 description: >-
   Can an autonomous coding agent start this bead in a fresh worktree now, and if not,
   what blocks it. An open blocking dependency decides without a model call.
@@ -36,7 +36,7 @@ questions:
           The bead says work waits on an answer, a file, data, access or approval from a
           person, and the latest update does not say it has arrived
         examples:
-          - "needs the field list from Mike before Phase 2 is built"
+          - "needs the field list from Dana before the second phase is built"
           - "waiting for the attachment"
           - "{{owner}} to choose the shape first"
       "false":
@@ -111,7 +111,7 @@ questions:
         what: >-
           The latest update reports the thing asked for as obtained, sent, confirmed,
           decided, landed elsewhere, or says the bead can close
-        examples: ["Evidence it was sent; may close this bead", "material received; the client names are known"]
+        examples: ["Evidence it was sent; may close this bead", "material received; the list of names is known"]
       "false":
         what: >-
           The latest update still waits for something, reports only partial progress, or
@@ -129,7 +129,7 @@ questions:
         examples: ["fix the workable count", "write the gap assessment under docs/", "draft the chaser under drafts/"]
       "false":
         what: "The deliverable is a conversation, meeting, message, purchase, decision or a person's review"
-        examples: ["chat with Mike and James", "name the costing owner"]
+        examples: ["chat with Dana and Priya", "name the costing owner"]
 
   spec_clarity:
     type: score
@@ -192,7 +192,7 @@ questions:
           The bead says the implementation belongs in another repository, or needs
           another system's API, contract or credentials at the same time
         examples:
-          - "implementation work belongs in the scout repo; this bead tracks the commitment"
+          - "implementation work belongs in the enquiries repo; this bead tracks the commitment"
           - "needs the sizing API endpoint, credentials and an agreed contract"
 
   target_repo:

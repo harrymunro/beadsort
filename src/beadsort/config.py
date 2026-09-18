@@ -314,7 +314,7 @@ project:
 # People a bead can be waiting on. Slug -> details. Injected into the triage pack.
 people: {}
 #  mike:
-#    name: "Mike Lefler"
+#    name: "Mike Tanner"
 #    aliases: [Mike]
 #    role: "programme sponsor"
 

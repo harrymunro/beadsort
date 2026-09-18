@@ -56,10 +56,10 @@ def test_rerun_replaces_only_its_own_label(tmp_path: Path) -> None:
     cache = _cache(tmp_path)
     cache.set_written_labels("bs-1", {"waiting-on": "mike"})
     bead = Bead(id="bs-1", title="T", labels=("waiting-on:mike", "human"))
-    plan = plan_bead(_result(bead, {"waiting-on": "romy"}), cache=cache)
-    assert plan.add == ["waiting-on:romy"] and plan.remove == ["waiting-on:mike"]
+    plan = plan_bead(_result(bead, {"waiting-on": "lena"}), cache=cache)
+    assert plan.add == ["waiting-on:lena"] and plan.remove == ["waiting-on:mike"]
     assert "human" not in plan.remove
-    assert plan.written_after == {"waiting-on": "romy"}
+    assert plan.written_after == {"waiting-on": "lena"}
 
 
 def test_none_removes_own_label(tmp_path: Path) -> None:
@@ -162,19 +162,19 @@ def test_written_labels_for_other_packs_survive_an_apply(tmp_path: Path) -> None
     cache = _cache(tmp_path)
     cache.set_written_labels("bs-1", {"size": "m", "waiting-on": "mike"})
     bead = Bead(id="bs-1", title="T", labels=("size:m", "waiting-on:mike"))
-    plan = plan_bead(_result(bead, {"waiting-on": "romy"}), cache=cache)
-    assert plan.written_after == {"size": "m", "waiting-on": "romy"}
+    plan = plan_bead(_result(bead, {"waiting-on": "lena"}), cache=cache)
+    assert plan.written_after == {"size": "m", "waiting-on": "lena"}
     assert plan.remove == ["waiting-on:mike"] and "size:m" not in plan.remove
 
     # Later the size pack runs again: size:m is still ours, so it can be replaced.
     cache.set_written_labels("bs-1", plan.written_after)
-    bead2 = Bead(id="bs-1", title="T", labels=("size:m", "waiting-on:romy"))
+    bead2 = Bead(id="bs-1", title="T", labels=("size:m", "waiting-on:lena"))
     result = BeadResult(bead=bead2)
     result.verdicts["size"] = Verdict(labels={"size": "l"})
     result.packs_applied = ["size"]
     plan2 = plan_bead(result, cache=cache)
     assert plan2.remove == ["size:m"] and plan2.add == ["size:l"] and plan2.respected == []
-    assert plan2.written_after == {"size": "l", "waiting-on": "romy"}
+    assert plan2.written_after == {"size": "l", "waiting-on": "lena"}
 
 
 def test_json_metadata_resends_foreign_keys(tmp_path: Path) -> None:
