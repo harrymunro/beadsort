@@ -1,0 +1,206 @@
+id: agent-ready
+version: 1
+description: >-
+  Can an autonomous coding agent start this bead in a fresh worktree now, and if not,
+  what blocks it. An open blocking dependency decides without a model call.
+deriver: beadsort.packs.agent_ready
+dimensions: [agent-ready, blocker]
+applies_to:
+  statuses: [open]
+  types: [task, feature, bug]
+state: [parent, open_blockers]
+
+thresholds:
+  yes: 0.30        # a yes/no answer at or below this means "no obstacle"
+  no: 0.70         # at or above this means "confident obstacle"
+  choice_act: 0.60
+  spec_ready: 1.5  # spec_clarity score (0..3) needed for a clean yes
+  spec_conf: 0.50
+  spec_block: 1.0  # at or below this, with confidence, the blocker is spec
+
+questions:
+  needs_human_input_first:
+    type: noul
+    instructions:
+      question: >-
+        Before any work on this bead can start, must a person answer a question, supply
+        material, or give a go-ahead?
+      inspect: ["`bead.latest_update.text`", "`bead.description`"]
+      focus: >-
+        Judge the first step only. A question that can be answered after work has started
+        does not count. If `bead.latest_update.text` says the material has arrived, it is
+        no longer needed.
+    criteria:
+      "true":
+        what: >-
+          The bead says work waits on an answer, a file, data, access or approval from a
+          person, and the latest update does not say it has arrived
+        examples:
+          - "needs the field list from Mike before Phase 2 is built"
+          - "waiting for the attachment"
+          - "{{owner}} to choose the shape first"
+      "false":
+        what: >-
+          Work can start from what the bead contains; open questions can be handled along
+          the way or are answered in the latest update
+        examples:
+          - "reproduce and fix the counted-as-workable bug"
+          - "the key is now set on both instances"
+
+  needs_external_resource:
+    type: choice
+    instructions:
+      question: >-
+        What does doing or checking this work need that a fresh, sandboxed checkout of the
+        repository does not contain?
+      focus: >-
+        Judge only what the bead's text says or plainly implies is needed. Pick the first
+        thing that would stop an agent.
+    criteria:
+      none:
+        what: "Everything needed is in the repository or in the bead itself"
+        examples: ["the measured numbers and the rule are in the bead", "the pattern to follow is in a sibling module"]
+      secret_or_network:
+        what: "A live API key, a paid account, a call to a real external service, or a real model call"
+        not_for: "A key the latest update says is already set where the work runs"
+        examples: ["needs a live API key and network access", "run the smoke test against the provider"]
+      private_file_or_data:
+        what: >-
+          A file, dataset or document that is gitignored, on {{owner}}'s machine, on the
+          client's systems, or confidential and never committed
+        examples:
+          - "the workbook is gitignored and will not be in a fresh worktree"
+          - "real customer enquiry packs on disk"
+          - "real named-customer data"
+      deployed_environment:
+        what: >-
+          A running deployment, preview instance, production database, or console access
+          to a hosting or identity provider
+        examples: ["needs the deployed preview instance up and an access token", "an app registration in the client's identity tenant"]
+      person_check:
+        what: "The work can be done, but a person must review, test or confirm the result before it counts as done"
+        examples: ["engineering sign-off on reference cases", "walkthrough with the subject-matter expert"]
+      unclear:
+        what: "The bead does not say enough to tell"
+
+  requires_owner_judgement:
+    type: noul
+    instructions: >-
+      Does the bead leave open a choice only {{owner}} can make, such as what is worth
+      building, its scope, its name or its direction?
+    criteria:
+      "true":
+        what: "The bead says {{owner}} must choose, lists options without picking one, or the goal itself is undecided"
+        examples: ["Options: (a) ... (b) ... (c) both. {{owner}} to choose", "decide whether the forecast belongs inside the tool"]
+      "false":
+        what: "Remaining choices are technical and an engineer could make them from the bead"
+        examples: ["pick the cheapest correct fix"]
+
+  already_done:
+    type: noul
+    instructions:
+      question: >-
+        Does `bead.latest_update.text` say that what the bead asks for has already been
+        received, answered, sent, decided or finished?
+      inspect: ["`bead.latest_update.text`", "`bead.updates`"]
+      focus: >-
+        Compare the ask in `bead.title` and `bead.description` with what the latest update
+        reports. Progress on part of the ask is not the whole ask.
+    criteria:
+      "true":
+        what: >-
+          The latest update reports the thing asked for as obtained, sent, confirmed,
+          decided, landed elsewhere, or says the bead can close
+        examples: ["Evidence it was sent; may close this bead", "material received; the client names are known"]
+      "false":
+        what: >-
+          The latest update still waits for something, reports only partial progress, or
+          is about a different matter
+        examples: ["partially unblocked; the cross-check output is still outstanding", "chaser drafted, not yet sent"]
+
+  is_code_work:
+    type: noul
+    instructions: >-
+      Is the work in this bead done by editing files in a repository: code, tests,
+      configuration, data files or documents kept in the repository?
+    criteria:
+      "true":
+        what: "The deliverable is a change to repository files"
+        examples: ["fix the workable count", "write the gap assessment under docs/", "draft the chaser under drafts/"]
+      "false":
+        what: "The deliverable is a conversation, meeting, message, purchase, decision or a person's review"
+        examples: ["chat with Mike and James", "name the costing owner"]
+
+  spec_clarity:
+    type: score
+    instructions:
+      question: "How precisely does the bead say what to change and how to tell it is finished?"
+      focus: "Judge the text as written; do not fill gaps from general knowledge."
+    criteria:
+      - what: >-
+          Names a goal or a problem but not what to change: no location, no expected
+          result, or the goal is still being debated
+        examples: ["design note: proposal context mechanism", "feasibility study"]
+      - what: >-
+          The goal is clear and the area is named, but how to do it and what the finished
+          result looks like are left open
+        examples: ["instrument both services with tracing so events become measurable"]
+      - what: >-
+          Says what to change and where; the finished result is described in words but
+          there is no test, criteria list or example output
+        examples: ["exclude epics from the workable count so the loop ends"]
+      - what: >-
+          Says what to change, where, and how to check it: acceptance criteria, a test to
+          make pass, or an exact expected output
+        examples: ["measured 31 ready, 2 in progress; after the fix the count must be N and the loop ends"]
+
+  done_is_checkable:
+    type: noul
+    instructions: >-
+      Does the bead state how to tell the work is finished: acceptance criteria, a test, an
+      expected output, or an observable behaviour?
+    criteria:
+      "true":
+        what: "A concrete check is written down"
+        examples: ["the loop ends at 0", "verdict=missing is posted"]
+      "false":
+        what: "Only a goal or a direction is stated"
+
+  spec_lives_elsewhere:
+    type: noul
+    instructions: >-
+      Does the bead rely on a document, transcript, spreadsheet or file outside the bead
+      for the substance of what to build?
+    criteria:
+      "true":
+        what: "Points to a path, an attachment, a transcript or a working document for the details"
+        examples: ["committed in supplier-submission-draft.md section 5", "James's build spec v260907c (gitignored)"]
+      "false":
+        what: "The bead itself contains the substance"
+
+  scope_contained:
+    type: noul
+    instructions: >-
+      Can the work be finished inside this one repository, without a matching change in
+      another repository or an external system at the same time?
+    criteria:
+      "true":
+        what: "All edits land in this repository"
+        examples: ["fix the launcher count in this repo"]
+      "false":
+        what: >-
+          The bead says the implementation belongs in another repository, or needs
+          another system's API, contract or credentials at the same time
+        examples:
+          - "implementation work belongs in the scout repo; this bead tracks the commitment"
+          - "needs the sizing API endpoint, credentials and an agreed contract"
+
+  target_repo:
+    type: choice
+    when: repos
+    criteria_from: repos
+    instructions: "Which repository would the edits for this bead land in?"
+    criteria:
+      this_repo: "The repository this tracker belongs to"
+      not_repo_work: "No repository edits"
+      unclear: "Cannot tell from the bead"

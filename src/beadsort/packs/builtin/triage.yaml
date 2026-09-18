@@ -1,0 +1,325 @@
+id: triage
+version: 1
+description: >-
+  Who is this bead waiting on: a named person, {{owner}}, or a coding agent. Typed
+  successor to a COMMS / OWNER / CODE rubric. Also flags asks already satisfied and
+  reject candidates. Never closes anything.
+deriver: beadsort.packs.triage
+dimensions: [waiting-on, owner-kind, ask-urgency, stale]
+requires: [people]
+applies_to:
+  statuses: [open, in_progress, blocked]
+state: [parent, children]
+
+thresholds:
+  choice_act: 0.60        # blocking_party confidence to act on the category
+  choice_caution: 0.35    # below this: review only
+  person_act: 0.70        # stakeholder confidence to name a person (a wrong name is a wrong email)
+  noul_yes: 0.70
+  noul_no: 0.30
+  done_review_band: [0.40, 0.70]
+  code_override: {has_code_half: 0.70, code_can_start_now: 0.75}
+  stale_flag: 0.75
+  urgency_conf: 0.50
+  urgency_from_priority: {0: blocking}
+
+questions:
+  blocking_party:
+    type: choice
+    instructions:
+      question: "What is this bead waiting on right now?"
+      decide_from:
+        - "`bead.latest_update.text` first, because it overrides the description"
+        - "then `bead.title` and `bead.description`"
+      focus: >-
+        Pick the one thing that has to happen next before anything else in the bead can
+        move. If the bead has a code half and an ask half, pick the half that blocks the
+        other.
+    criteria:
+      named_person:
+        what: >-
+          {{owner}} must ask or tell a specific person something, or is waiting for that
+          person's answer, material, confirmation or agreement. Includes a message to that
+          person that is drafted but not yet sent, and a decision the bead says will be
+          made together with that person.
+        not_for: >-
+          A person quoted only as the source of a rule or opinion; a person whose reply
+          has already arrived according to `bead.latest_update.text`; a group with nobody
+          identifiable, such as 'raise with the client' (owner_decision).
+        examples:
+          - "Ask Josiane for a typical pricing model to bank in"
+          - "Balaji agreed to send a zipped RFQ pack; waiting for the attachment"
+          - "Mike needs to name the person who owns costing"
+          - "The email is drafted; {{owner}} has to send it to Sebastian"
+      owner_decision:
+        what: >-
+          {{owner}} must make a judgement call before anything else can happen: direction,
+          scope, naming, priority, a policy, which of several listed options to take, or
+          whom to ask when a person is needed but nobody is named.
+        not_for: >-
+          A decision the bead says is made with or by a named person outside the team
+          (named_person); a technical choice an engineer could make from the bead's text
+          (coding_agent).
+        examples:
+          - "Options: (a) a board fed by export, (b) intake mirrored in, (c) both. {{owner}} to choose the shape"
+          - "Decide the CI capacity strategy"
+          - "raise with FLS IT - nobody named"
+      owner_admin:
+        what: >-
+          {{owner}} must do something by hand that a coding agent cannot: issue or rotate
+          credentials, change settings in an external console, buy or sign something,
+          upload to an external system, save files from a chat or mailbox, or personally
+          review material using their own judgement.
+        not_for: >-
+          Sending or asking something to a named person (named_person); work an agent
+          could do inside the repository (coding_agent); a judgement about direction or
+          scope (owner_decision).
+        examples:
+          - "Rotate remaining production credentials"
+          - "Create the observability account in the EU region"
+          - "Save the diagram and deck from the Teams chat, then review them"
+      coding_agent:
+        what: >-
+          The next step is writing or changing code, tests, configuration, data files or
+          documents inside the repository, and the bead gives enough to start without
+          asking anyone.
+        not_for: >-
+          Work whose first step is a question to a person or a decision the bead says is
+          still open.
+        examples:
+          - "The launcher counts epics as workable; exclude them"
+          - "A headless review run that posts no verdict says so"
+          - "Instrument both services with tracing"
+      already_done:
+        what: >-
+          `bead.latest_update.text` says the outcome the bead asks for has already happened,
+          the ask has been answered, or the work was moved to another tracker, so nothing
+          remains here except closing or re-filing.
+        not_for: "An update that reports progress while something is still outstanding."
+        examples:
+          - "Evidence it was sent ... {{owner}} may close this bead"
+          - "Re-homed to another repository"
+          - "All three stated goals were completed"
+      parked:
+        what: >-
+          The bead holds context or a plan for later and says explicitly that nothing
+          should be built, asked or decided yet.
+        not_for: "A bead that is merely old or low priority."
+        examples:
+          - "holds the cross-tool plan so nobody builds the link before the first live forecast cycle"
+          - "not in scope until proof-of-concept feedback lands"
+      unclear:
+        what: >-
+          The bead does not say what the next step is, or says contradictory things and
+          the latest update does not settle it.
+        examples:
+          - "A record of a conversation with no ask, decision or work stated"
+
+  stakeholder:
+    type: choice
+    criteria_from: people
+    instructions:
+      question: "Which person, other than {{owner}}, must respond for this bead to move forward?"
+      decide_from:
+        - "`bead.latest_update.text` first"
+        - "then `bead.title` and `bead.description`"
+      pick: >-
+        The person who must answer, send, confirm, agree or attend. If two people must
+        respond, the one whose response is needed first.
+      not_the_person:
+        - "Someone quoted or cited as the source of a rule, an opinion or a transcript"
+        - "Someone whose response has already arrived according to `bead.latest_update.text`"
+        - "{{owner}}"
+        - "Any name in `project.agent_names`, and the signed author of an update"
+    criteria:
+      unspecified: >-
+        A person or group outside the project must respond, but the bead names nobody
+        identifiable, for example 'raise with the client' or 'ask IT'.
+      other_named: "The bead names a specific person who is not in this list."
+      nobody: >-
+        No person other than {{owner}} needs to respond; the bead waits on {{owner}} or on
+        work.
+
+  waiting_on_person:
+    type: noul
+    instructions:
+      question: "Is the next step a message to, or a response from, a person other than {{owner}}?"
+      inspect: ["`bead.latest_update.text`", "`bead.description`"]
+      focus: "Judge whether the ball is in another person's court now, not whether people are mentioned."
+    criteria:
+      "true":
+        what: >-
+          A person other than {{owner}} must answer, send, confirm or agree before the bead
+          can move, or {{owner}} still has to ask or tell them
+        examples:
+          - "waiting for the attachment Balaji promised"
+          - "James will propose the names"
+          - "draft is ready; send it to Sebastian"
+      "false":
+        what: >-
+          Nothing waits on another person: the next step sits with {{owner}} alone or with
+          an agent, or the response has already arrived
+        examples:
+          - "Balaji's pack arrived; build the fixture"
+          - "{{owner}} to choose between the listed options"
+          - "rotate the credentials"
+
+  already_done:
+    type: noul
+    instructions:
+      question: >-
+        Does `bead.latest_update.text` say that what the bead asks for has already been
+        received, answered, sent, decided or finished?
+      inspect: ["`bead.latest_update.text`", "`bead.updates`"]
+      focus: >-
+        Compare the ask in `bead.title` and `bead.description` with what the latest update
+        reports. Progress on part of the ask is not the whole ask.
+    criteria:
+      "true":
+        what: >-
+          The latest update reports the thing asked for as obtained, sent, confirmed,
+          decided, landed elsewhere, or says the bead can close
+        examples:
+          - "Evidence it was sent; may close this bead"
+          - "material received; the client names are known"
+          - "handled outside the tracker"
+      "false":
+        what: >-
+          The latest update still waits for something, reports only partial progress, or
+          is about a different matter
+        examples:
+          - "partially unblocked; the cross-check output is still outstanding"
+          - "chaser drafted, not yet sent"
+          - "no nominations received"
+
+  owner_action_kind:
+    type: choice
+    instructions:
+      question: "If {{owner}} personally has to act next, what kind of action is it?"
+      focus: "Judge the first action {{owner}} must take, not everything the bead mentions."
+    criteria:
+      decision: "Choose between options, set scope, direction, a name, a priority or a policy."
+      credentials_or_access: "Issue, rotate or grant credentials, keys, accounts or permissions in an external console."
+      purchase_or_contract: "Buy, license, sign or negotiate something."
+      send_or_present: "Send a drafted message or document, or present material at a meeting."
+      meeting_or_call: "Arrange, attend or hold a meeting or call."
+      personal_review: "Read, test or check something and give their own opinion or approval."
+      other_admin: "Another manual step an agent cannot perform, such as saving files from a mailbox or uploading to an external system."
+      not_applicable: "{{owner}} does not have to act personally; the bead waits on someone else or on work."
+
+  ask_urgency:
+    type: score
+    instructions:
+      question: "How much waits on the person's response?"
+      focus: "Judge what the bead says is held up, not the tone."
+    criteria:
+      - what: >-
+          Nothing waits on the answer; it is context, a courtesy or a reminder, with no
+          date or dependent work stated
+        examples: ["a reminder to record what arrives", "share a reference data set when found"]
+      - what: >-
+          Other work can continue, but this bead cannot finish, or a dated event such as a
+          meeting, a gate or a release will arrive, without the answer
+        examples: ["needed before the gate 1 pack", "the profiles can be written once the list arrives"]
+      - what: >-
+          The bead says work cannot start, or other beads are stuck, until this person
+          responds
+        examples: ["the dependency behind Touchpoint 3", "nothing can be salvaged until the right-to-reuse is confirmed"]
+
+  has_code_half:
+    type: noul
+    instructions: >-
+      Does the bead describe work that consists of writing or changing code, tests,
+      configuration, data files or documents inside the repository?
+    criteria:
+      "true":
+        what: "Some of the bead's work is edits to repository files"
+        examples: ["build the fixture from the pack", "write the gap list in docs/", "exclude epics from the count"]
+      "false":
+        what: >-
+          The work is conversation, decision, purchase, review by a person or a document
+          held outside the repository
+        examples: ["chat with Mike and James on 9 Sep", "name the costing owner"]
+
+  code_can_start_now:
+    type: noul
+    instructions:
+      question: "Could the repository work in this bead start now, before any person answers anything?"
+      focus: >-
+        Look for material or answers the bead says are still missing. If they are present
+        according to `bead.latest_update.text`, the work can start.
+    criteria:
+      "true":
+        what: "The inputs the work needs are already available or not required"
+        examples: ["the key is now set on both instances", "research narratives can start on the P1 owners now"]
+      "false":
+        what: >-
+          The bead says the work waits for an answer, a file, data, access or a go-ahead
+          that has not arrived
+        examples: ["the client names sit in an attachment not yet passed on", "needs the field list before Phase 2 is built"]
+
+  decision_needs_owner:
+    type: noul
+    instructions: >-
+      Would the decision this bead describes need {{owner}}'s own judgement about
+      direction, scope, naming, commercial or policy matters, rather than being a
+      technical choice a competent engineer could make from the bead's text?
+    criteria:
+      "true":
+        what: "The choice is about what is worth doing, how it is named, who owns it, or what the client should be told"
+        examples: ["whether the forecast lives inside Horizon or as its own tool", "which of three board shapes to adopt"]
+      "false":
+        what: "The choice is technical, the bead already implies the answer, or the bead says the answer is obvious once implemented"
+        examples: ["pick the cheapest correct fix", "follow the pattern in the sibling module"]
+
+  decision_is_blocking:
+    type: noul
+    instructions: >-
+      Does the bead say that a decision has to be made before any implementation or other
+      work in it can start?
+    criteria:
+      "true":
+        what: "The bead states or plainly implies that work waits on the decision"
+        examples: ["someone has to decide, because it changes what gets released first"]
+      "false":
+        what: "Work can proceed and the decision can be taken along the way, or the bead is a record of a decision already taken"
+        examples: ["ruling recorded on 9 Sep; implementation follows"]
+
+  superseded:
+    type: noul
+    instructions: >-
+      Does the bead's own text say the work was moved to another tracker, replaced by a
+      later piece of work, or made unnecessary by a change since it was written?
+    criteria:
+      "true":
+        what: "The bead or its updates name the replacement, the new home, or the change that made it moot"
+        examples: ["moved to the propgen repository's own tracker", "the newer film already uses the corrected figure"]
+      "false":
+        what: "No replacement or new home is named; the work is still described as needed"
+
+  no_consumer:
+    type: noul
+    instructions: >-
+      Is this a speculative idea that nobody is asking for, with no date, gate, meeting or
+      dependent work named?
+    criteria:
+      "true":
+        what: "Written as 'someday', 'worth considering' or 'only if', with no requester and nothing waiting on it"
+        examples: ["only worth doing if the film is shown again"]
+      "false":
+        what: "A named person asked for it, a date or gate depends on it, or another piece of work needs it"
+        examples: ["Jaco's explicit ask on the 20 Aug call"]
+
+  umbrella_only:
+    type: noul
+    instructions:
+      question: >-
+        Is this bead a container whose every concrete step is filed as a separate bead,
+        with no work of its own left in it?
+      inspect: ["`bead.description`", "`children`"]
+    criteria:
+      "true":
+        what: "The bead only groups or tracks other beads; anything actionable is in `children` or named elsewhere"
+        examples: ["Parent for the actionable next steps; children below are the ranked steps"]
+      "false":
+        what: "The bead itself carries an ask, a decision or work not filed elsewhere"

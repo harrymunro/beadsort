@@ -1,0 +1,110 @@
+id: size
+version: 1
+description: >-
+  T-shirt size and breakage risk for a unit of work, from independent Scores combined in
+  code. Weights and bucket edges are thresholds; retune them without re-running the model.
+deriver: beadsort.packs.size
+dimensions: [size, risk]
+applies_to:
+  statuses: [open, in_progress, blocked]
+  types: [task, feature, bug]
+state: [parent]
+
+thresholds:
+  weights: {scope_breadth: 0.45, investigation_needed: 0.35, verification_effort: 0.20}
+  buckets:
+    - {max: 0.30, value: s}
+    - {max: 0.62, value: m}
+    - {value: l}
+  dead_zone: 0.04            # composite within this of an edge is unsure
+  min_score_confidence: 0.40 # any contributing Score below this is unsure
+  risk_conf: 0.50
+
+questions:
+  scope_breadth:
+    type: score
+    instructions:
+      question: "How many separate places would have to change to finish the work this bead describes?"
+      focus: "Judge the spread of the change, not how hard any one part is."
+    criteria:
+      - what: "One small change in one place: a function, a config value, a line of copy, one file"
+        examples: ["set the secret key from the environment", "correct a counted figure in a slide"]
+      - what: "A change confined to one module or feature and its own tests"
+        examples: ["exclude epics from the workable count", "a review run that posts no verdict says so"]
+      - what: "Changes across several modules, or one module plus its tests, docs, migration and configuration together"
+        examples: ["instrument two services with tracing and wire up a backend"]
+      - what: "Work spanning more than one repository or system, a data migration, or a new component other components must be adapted to"
+        examples: ["backups and a tested restore for three separately deployed tools", "an orchestration layer over an existing tool"]
+
+  investigation_needed:
+    type: score
+    instructions:
+      question: "How much has to be found out before the change to make is known?"
+      focus: "Judge what the bead leaves open, not what it already states."
+    criteria:
+      - what: "Nothing: the bead states the change"
+        examples: ["the measured numbers and the rule to apply are in the bead"]
+      - what: "Read the relevant code or data first to confirm the approach or locate the change"
+        examples: ["find where the count is computed and add the exclusion"]
+      - what: "Reproduce a problem, trace behaviour across components, or reconcile figures from more than one source before the change is known"
+        examples: ["reconcile in-app cost logs against provider billing to find the gap"]
+      - what: "A study, design note or spike whose result decides what is built, or the approach is contested"
+        examples: ["evaluate a gateway product as the single control point", "feasibility study to unify four tools"]
+
+  verification_effort:
+    type: score
+    instructions:
+      question: "What does it take to show the work is done correctly?"
+    criteria:
+      - what: "Existing tests or a quick look cover it"
+        examples: ["a copy change", "a config value"]
+      - what: "New tests, fixtures or a written check must be added"
+        examples: ["a test that the loop ends when only epics remain"]
+      - what: "Needs a live environment, real data, a deployment or a person to confirm the result"
+        examples: ["one restore actually performed and recorded as evidence", "engineering sign-off on reference cases"]
+
+  risk_of_breakage:
+    type: score
+    instructions:
+      question: "If the change were done wrongly, what would break?"
+      focus: "Judge consequences for other code, users and data, not the difficulty of the work."
+    criteria:
+      - what: "Isolated: internal, cosmetic or additive; nothing else depends on it and it is easy to revert"
+        examples: ["a new document in docs/", "a verbosity tweak to a prompt"]
+      - what: "Changes behaviour other code or users rely on, but tests exist or it can be rolled back"
+        examples: ["change what the launcher counts as workable", "add a retry path"]
+      - what: "Touches security, credentials, data integrity, money, a public API or an external contract, or has no easy rollback"
+        examples: ["rotate production credentials", "change a public API bound", "a data migration"]
+
+  overall_effort:
+    type: score
+    instructions: "How long would a competent engineer who knows the codebase take to finish this bead?"
+    criteria:
+      - what: "One sitting: a single small pull request"
+      - what: "About a day: one pull request with tests, or a short series"
+      - what: "Several days or several pull requests, or unknown because the approach is still open"
+
+  work_kind:
+    type: choice
+    instructions: "What kind of work is this bead mainly?"
+    criteria:
+      bug_fix: "Correct behaviour that is wrong today"
+      feature: "Add behaviour that does not exist"
+      refactor_or_chore: "Restructure, upgrade or tidy without changing behaviour"
+      config_or_infra: "Deployment, secrets handling, backups, CI, hosting settings expressed as files"
+      data_or_content: "Port, load, convert or correct data or fixtures"
+      docs_in_repo: "A document, note, pack or draft kept in the repository"
+      research_or_spike: "Find something out and write it up; the outcome decides later work"
+      not_repo_work: "A meeting, message, decision, purchase or review with no repository edits"
+
+  is_umbrella:
+    type: noul
+    instructions: >-
+      Is this bead a container whose real work is described in other beads or documents
+      rather than in itself?
+    criteria:
+      "true":
+        what: "Groups, tracks or summarises other work; nothing concrete to build is stated here"
+        examples: ["Gate 2 executive pack: still needed: who sits on the committee, how often it meets"]
+      "false":
+        what: "States its own concrete work"

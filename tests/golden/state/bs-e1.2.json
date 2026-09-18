@@ -1,0 +1,50 @@
+{
+ "bead": {
+  "acceptance_criteria": null,
+  "description": "## Friendly Summary\nWe cannot finish reconciliation until Mike sends the August export from the finance system.\n\n## Technical\nFirst step: ask Mike for the attachment. Then load it with scripts/load_export.py.",
+  "design": null,
+  "id": "bs-e1.2",
+  "issue_type": "task",
+  "latest_update": {
+   "author": "Notarius",
+   "date": "2026-09-05",
+   "source": "note",
+   "text": "Mike replied: export received and saved under data/finance/2026-08.csv. Loading can start now."
+  },
+  "priority": 2,
+  "status": "open",
+  "title": "Ask Mike for the August export",
+  "updates": [
+   {
+    "author": "Notarius",
+    "date": "2026-09-05",
+    "source": "note",
+    "text": "Mike replied: export received and saved under data/finance/2026-08.csv. Loading can start now."
+   },
+   {
+    "author": "harrymunro",
+    "date": "2026-08-21",
+    "source": "comment",
+    "text": "Emailed Mike on 2026-08-21."
+   },
+   {
+    "author": "Scriba",
+    "date": "2026-08-20",
+    "source": "note",
+    "text": "chaser drafted, not yet sent."
+   }
+  ]
+ },
+ "open_blockers": [],
+ "parent": {
+  "description_excerpt": "## Friendly Summary Group for the reconciliation work. ## Technical Parent for the actionable next steps; children below are the ranked steps.",
+  "id": "bs-e1",
+  "status": "open",
+  "title": "Payment reconciliation epic"
+ },
+ "project": {
+  "name": "Test",
+  "owner": "Harry",
+  "summary": "A test backlog."
+ }
+}
