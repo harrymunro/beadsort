@@ -70,6 +70,17 @@ def derive(answers: Answers, thresholds: Mapping[str, Any], ctx: DeriveContext) 
         }
     )
 
+    verdict.meta["confidence"] = round(
+        min(
+            resource_conf,
+            spec_c,
+            abs(human - 0.5) * 2,
+            abs(owner - 0.5) * 2,
+            abs(is_code - 0.5) * 2,
+        ),
+        3,
+    )
+
     blocker: str | None = None
     if human >= no:
         blocker = "human-input"

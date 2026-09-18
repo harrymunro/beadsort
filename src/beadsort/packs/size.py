@@ -65,7 +65,7 @@ def derive(answers: Answers, thresholds: Mapping[str, Any], ctx: DeriveContext) 
         verdict.meta[qid] = round(norm, 3)
     composite = total / total_weight if total_weight else 0.0
     verdict.meta["composite"] = round(composite, 4)
-    verdict.meta["lowest_confidence"] = round(lowest_conf, 3)
+    verdict.meta["confidence"] = round(lowest_conf, 3)
 
     index = _bucket_index(composite, buckets)
     holistic = answers.score("overall_effort")

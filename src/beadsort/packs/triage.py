@@ -76,7 +76,7 @@ def derive(answers: Answers, thresholds: Mapping[str, Any], ctx: DeriveContext) 
     category = answers.choice("blocking_party")
     cat_conf = answers.conf("blocking_party")
     verdict.meta["category"] = category
-    verdict.meta["category_confidence"] = round(cat_conf, 3)
+    verdict.meta["confidence"] = round(cat_conf, 3)
 
     # 1. A satisfied ask wins over everything: the latest update says it already happened.
     if done_p >= noul_yes or (category == "already_done" and cat_conf >= choice_act):
