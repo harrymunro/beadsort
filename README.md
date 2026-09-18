@@ -13,6 +13,9 @@
 
 ---
 
+<img width="1536" height="1024" alt="beadsort" src="https://github.com/user-attachments/assets/08941873-4aa1-444f-8d9e-79a92c49ada1" />
+
+
 beadsort labels every bead with fast, calibrated judgments so `bd ready` hands agents only the work they can actually do, and hands you only the decisions that are actually yours.
 
 Typed answers, not prose. Re-run the whole backlog in seconds. Written straight back into beads.
